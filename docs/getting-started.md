@@ -16,8 +16,8 @@
 === "From source"
 
     ```bash
-    git clone https://github.com/aeltai/rancher-migrate.git
-    cd rancher-migrate
+    git clone https://github.com/aeltai/Rancher-PolyMorph.git
+    cd Rancher-PolyMorph
     make build
     ./bin/rancher-migrate --version
     ```
@@ -25,7 +25,7 @@
 === "Release binary"
 
     Download `rancher-migrate` for your platform from
-    [GitHub Releases](https://github.com/aeltai/rancher-migrate/releases).
+    [GitHub Releases](https://github.com/aeltai/Rancher-PolyMorph/releases).
 
 ## First run
 

@@ -1,13 +1,13 @@
-# rancher-migrate
+# Rancher PolyMorph
 
-[![CI](https://github.com/aeltai/rancher-migrate/actions/workflows/ci.yml/badge.svg)](https://github.com/aeltai/rancher-migrate/actions/workflows/ci.yml)
-[![Docs](https://github.com/aeltai/rancher-migrate/actions/workflows/docs.yml/badge.svg)](https://github.com/aeltai/rancher-migrate/actions/workflows/docs.yml)
+[![CI](https://github.com/aeltai/Rancher-PolyMorph/actions/workflows/ci.yml/badge.svg)](https://github.com/aeltai/Rancher-PolyMorph/actions/workflows/ci.yml)
+[![Docs](https://github.com/aeltai/Rancher-PolyMorph/actions/workflows/docs.yml/badge.svg)](https://github.com/aeltai/Rancher-PolyMorph/actions/workflows/docs.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Release](https://img.shields.io/github/v/release/aeltai/rancher-migrate)](https://github.com/aeltai/rancher-migrate/releases)
+[![Release](https://img.shields.io/github/v/release/aeltai/Rancher-PolyMorph)](https://github.com/aeltai/Rancher-PolyMorph/releases)
 
-CLI for sanitizing Rancher backup tarballs and **migrating Rancher to a new management cluster** (backup → sanitize → restore).
+**Rancher PolyMorph** is a CLI (`rancher-migrate`) for sanitizing Rancher backup tarballs and **migrating Rancher to a new management cluster** (backup → sanitize → restore).
 
-📖 **Documentation:** [docs/](docs/) (browse on GitHub) · [MkDocs site](https://aeltai.github.io/rancher-migrate/) *(requires public repo + GitHub Pages enabled)*
+📖 **Documentation:** [docs/](docs/) · [https://aeltai.github.io/Rancher-PolyMorph/](https://aeltai.github.io/Rancher-PolyMorph/)
 
 ## Features
 
@@ -21,8 +21,8 @@ CLI for sanitizing Rancher backup tarballs and **migrating Rancher to a new mana
 ## Quick start
 
 ```bash
-git clone https://github.com/aeltai/rancher-migrate.git
-cd rancher-migrate
+git clone https://github.com/aeltai/Rancher-PolyMorph.git
+cd Rancher-PolyMorph
 make build
 
 ./bin/rancher-migrate config init
@@ -45,7 +45,7 @@ make build
 4. Install cert-manager + Rancher Helm after restore completes
 5. Reconnect downstream RKE1 agents
 
-See the [migration guide](https://aeltai.github.io/rancher-migrate/migration/) and [sanitize reference](docs/sanitize-backup-for-restore.md).
+See the [migration guide](https://aeltai.github.io/Rancher-PolyMorph/migration/) and [sanitize reference](docs/sanitize-backup-for-restore.md).
 
 ## Configuration
 
@@ -53,7 +53,7 @@ See the [migration guide](https://aeltai.github.io/rancher-migrate/migration/) a
 rancher-migrate config init   # ~/.config/rancher-migrate/rancher-migrate.yaml
 ```
 
-See [config.example.yaml](config.example.yaml) and [configuration docs](https://aeltai.github.io/rancher-migrate/configuration/).
+See [config.example.yaml](config.example.yaml) and [configuration docs](https://aeltai.github.io/Rancher-PolyMorph/configuration/).
 
 ## Development
 

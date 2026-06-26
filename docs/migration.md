@@ -50,5 +50,5 @@ Or use the TUI: **Full migration → Download from S3**.
 
 ## Further reading
 
-- [sanitize-backup-for-restore.md](https://github.com/aeltai/rancher-migrate/blob/main/docs/sanitize-backup-for-restore.md) — detailed sanitize semantics
+- [sanitize-backup-for-restore.md](https://github.com/aeltai/Rancher-PolyMorph/blob/main/docs/sanitize-backup-for-restore.md) — detailed sanitize semantics
 - [Keep vs drop](concepts/keep-drop.md) — what gets removed

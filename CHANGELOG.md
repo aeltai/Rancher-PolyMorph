@@ -20,4 +20,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Pages documentation site
 - CI workflow (test, lint, build) and release workflow
 
-[0.0.1]: https://github.com/aeltai/rancher-migrate/releases/tag/v0.0.1
+[0.0.1]: https://github.com/aeltai/Rancher-PolyMorph/releases/tag/v0.0.1

@@ -1,6 +1,6 @@
 # Changelog
 
-See the full [CHANGELOG.md](https://github.com/aeltai/rancher-migrate/blob/main/CHANGELOG.md) on GitHub.
+See the full [CHANGELOG.md](https://github.com/aeltai/Rancher-PolyMorph/blob/main/CHANGELOG.md) on GitHub.
 
 ## [0.0.1] - 2026-06-26
 

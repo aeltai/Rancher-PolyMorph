@@ -63,4 +63,4 @@ ui:
 | `restore` | `backup_pod_label` | Label to find rancher-backup operator pod |
 | `s3` | `bucket`, `prefix` | S3 pull/push defaults |
 
-See [config.example.yaml](https://github.com/aeltai/rancher-migrate/blob/main/config.example.yaml) in the repository.
+See [config.example.yaml](https://github.com/aeltai/Rancher-PolyMorph/blob/main/config.example.yaml) in the repository.

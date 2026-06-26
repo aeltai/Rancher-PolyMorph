@@ -13,8 +13,8 @@ func Root() *cobra.Command {
 
 	root := &cobra.Command{
 		Use:   "rancher-migrate",
-		Short: "Rancher backup sanitize and migration to a new cluster",
-		Long: `rancher-migrate — CLI for sanitizing Rancher backup tarballs before restore
+		Short: "Rancher PolyMorph — backup sanitize and migration to a new cluster",
+		Long: `Rancher PolyMorph (rancher-migrate) — CLI for sanitizing Rancher backup tarballs before restore
 on a new management cluster, inspecting backups, and generating Restore CR manifests.
 
 Migration flow:

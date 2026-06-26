@@ -1,11 +1,11 @@
-# rancher-migrate
+# Rancher PolyMorph
 
 **Sanitize Rancher backup tarballs and migrate Rancher to a new management cluster.**
 
-`rancher-migrate` filters full Rancher backups down to the downstream cluster(s) you want to keep, strips local-cluster artifacts that would conflict on restore, and drives the **rancher-backup** restore flow on a target cluster.
+Rancher PolyMorph (`rancher-migrate`) filters full Rancher backups down to the downstream cluster(s) you want to keep, strips local-cluster artifacts that would conflict on restore, and drives the **rancher-backup** restore flow on a target cluster.
 
 [:octicons-arrow-right-24: Getting started](getting-started.md){ .md-button .md-button--primary }
-[:octicons-mark-github-16: GitHub](https://github.com/aeltai/rancher-migrate){ .md-button }
+[:octicons-mark-github-16: GitHub](https://github.com/aeltai/Rancher-PolyMorph){ .md-button }
 
 ## Why this tool?
 
@@ -13,7 +13,7 @@ Moving Rancher management to a new cluster (backup → restore) requires a **san
 
 - Full backups include **every** registered downstream cluster, Fleet mappings, and the **local** management cluster state.
 - Restoring a full backup onto a fresh Rancher instance causes conflicts — local cluster objects, ghost Fleet IDs, and clusters you did not intend to migrate.
-- `rancher-migrate` builds an explicit **keep/drop plan**, previews it as a tree, and writes a restore-ready tarball.
+- Rancher PolyMorph builds an explicit **keep/drop plan**, previews it as a tree, and writes a restore-ready tarball.
 
 ## Features
 
@@ -28,8 +28,8 @@ Moving Rancher management to a new cluster (backup → restore) requires a **san
 ## Quick example
 
 ```bash
-git clone https://github.com/aeltai/rancher-migrate.git
-cd rancher-migrate && make build
+git clone https://github.com/aeltai/Rancher-PolyMorph.git
+cd Rancher-PolyMorph && make build
 
 rancher-migrate inspect -i ./backups/source-full.tar.gz --tree
 rancher-migrate sanitize \
@@ -57,4 +57,4 @@ See the [Migration guide](migration.md) for RKE1-specific notes.
 
 ## License
 
-Apache-2.0 — see [LICENSE](https://github.com/aeltai/rancher-migrate/blob/main/LICENSE).
+Apache-2.0 — see [LICENSE](https://github.com/aeltai/Rancher-PolyMorph/blob/main/LICENSE).

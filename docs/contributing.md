@@ -5,8 +5,8 @@ Contributions welcome! This project is licensed under **Apache-2.0**.
 ## Development setup
 
 ```bash
-git clone https://github.com/aeltai/rancher-migrate.git
-cd rancher-migrate
+git clone https://github.com/aeltai/Rancher-PolyMorph.git
+cd Rancher-PolyMorph
 make build
 make test
 make test-cover

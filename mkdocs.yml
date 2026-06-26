@@ -1,8 +1,8 @@
-site_name: rancher-migrate
+site_name: Rancher PolyMorph
 site_description: Sanitize Rancher backups and migrate to a new management cluster
-site_url: https://aeltai.github.io/rancher-migrate/
-repo_url: https://github.com/aeltai/rancher-migrate
-repo_name: aeltai/rancher-migrate
+site_url: https://aeltai.github.io/Rancher-PolyMorph/
+repo_url: https://github.com/aeltai/Rancher-PolyMorph
+repo_name: aeltai/Rancher-PolyMorph
 edit_uri: edit/main/docs/
 
 theme:
@@ -67,4 +67,4 @@ plugins:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/aeltai/rancher-migrate
+      link: https://github.com/aeltai/Rancher-PolyMorph
