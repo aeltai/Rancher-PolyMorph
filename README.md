@@ -7,7 +7,7 @@
 
 CLI for sanitizing Rancher backup tarballs and **migrating Rancher to a new management cluster** (backup → sanitize → restore).
 
-📖 **Documentation:** [https://aeltai.github.io/rancher-migrate/](https://aeltai.github.io/rancher-migrate/)
+📖 **Documentation:** [docs/](docs/) (browse on GitHub) · [MkDocs site](https://aeltai.github.io/rancher-migrate/) *(requires public repo + GitHub Pages enabled)*
 
 ## Features
 

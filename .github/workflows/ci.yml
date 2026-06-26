@@ -21,7 +21,10 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Test
-        run: go test ./... -race -count=1 -coverprofile=coverage.out
+        run: go test ./... -race -count=1
+
+      - name: Coverage
+        run: go test ./... -count=1 -coverprofile=coverage.out
 
       - name: Build
         run: go build -o bin/rancher-migrate .
