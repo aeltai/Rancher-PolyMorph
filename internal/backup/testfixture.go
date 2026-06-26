@@ -22,7 +22,7 @@ func writeMinimalFixture(path string) error {
 			"metadata": map[string]any{"name": "local"},
 			"spec":     map[string]any{"displayName": "local", "rke2Config": map[string]any{}},
 		},
-		"nodes.management.cattle.io#v3/local/m-loc.json": map[string]any{"metadata": map[string]any{"name": "m-loc"}},
+		"nodes.management.cattle.io#v3/local/m-loc.json":   map[string]any{"metadata": map[string]any{"name": "m-loc"}},
 		"nodes.management.cattle.io#v3/c-aaaaa/m-aaa.json": map[string]any{"metadata": map[string]any{"name": "m-aaa"}},
 		"nodes.management.cattle.io#v3/c-bbbbb/m-bbb.json": map[string]any{"metadata": map[string]any{"name": "m-bbb"}},
 		"settings.management.cattle.io#v3/server-url.json": map[string]any{"value": "https://example.com"},

@@ -1,6 +1,13 @@
 # rancher-migrate
 
+[![CI](https://github.com/aeltai/rancher-migrate/actions/workflows/ci.yml/badge.svg)](https://github.com/aeltai/rancher-migrate/actions/workflows/ci.yml)
+[![Docs](https://github.com/aeltai/rancher-migrate/actions/workflows/docs.yml/badge.svg)](https://github.com/aeltai/rancher-migrate/actions/workflows/docs.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Release](https://img.shields.io/github/v/release/aeltai/rancher-migrate)](https://github.com/aeltai/rancher-migrate/releases)
+
 CLI for sanitizing Rancher backup tarballs and **migrating Rancher to a new management cluster** (backup → sanitize → restore).
+
+📖 **Documentation:** [https://aeltai.github.io/rancher-migrate/](https://aeltai.github.io/rancher-migrate/)
 
 ## Features
 
@@ -22,7 +29,7 @@ make build
 ./bin/rancher-migrate ui
 
 # Or non-interactive:
-./bin/rancher-migrate inspect -i ./backups/source-full.tar.gz
+./bin/rancher-migrate inspect -i ./backups/source-full.tar.gz --tree
 ./bin/rancher-migrate sanitize \
   -i ./backups/source-full.tar.gz \
   -o ./backups/sanitized.tar.gz \
@@ -38,25 +45,7 @@ make build
 4. Install cert-manager + Rancher Helm after restore completes
 5. Reconnect downstream RKE1 agents
 
-See [docs/sanitize-backup-for-restore.md](docs/sanitize-backup-for-restore.md).
-
-## TUI (`rancher-migrate ui`)
-
-Configure `rancher-migrate.yaml` first (`config init`). The menu covers the full migration path:
-
-| Menu item | What it does |
-|-----------|----------------|
-| **Full migration** | Pick **local file** or **S3** → inspect → cluster filter → sanitize → **Restore to cluster now** (kubectl cp + Restore CR + wait for Ready) |
-| **Sanitize backup** | Local file only — inspect, filter, write sanitized tarball |
-| **Pull from S3** | List `.tar.gz` in `s3.bucket` → download to `defaults.output_dir` → **enter** to sanitize |
-| **Inspect only** | Read-only inventory tree |
-| **Restore to cluster** | Point at an existing sanitized `.tar.gz` → copy to operator pod → apply Restore CR → poll until Ready |
-
-**S3** requires `s3.bucket`, `region`, and optional `prefix` / `profile` in config.
-
-**Restore** requires `restore.kubeconfig`, `operator_namespace`, `backup_pod_label`, and `backup_container_path` (see `config.example.yaml`). The TUI runs the same steps as `rancher-migrate restore run --local …` and watches the Restore CR until Ready.
-
-After restore completes, install cert-manager and Rancher Helm on the target cluster, then reconnect downstream agents.
+See the [migration guide](https://aeltai.github.io/rancher-migrate/migration/) and [sanitize reference](docs/sanitize-backup-for-restore.md).
 
 ## Configuration
 
@@ -64,27 +53,22 @@ After restore completes, install cert-manager and Rancher Helm on the target clu
 rancher-migrate config init   # ~/.config/rancher-migrate/rancher-migrate.yaml
 ```
 
-See [config.example.yaml](config.example.yaml) for `defaults`, `restore.kubeconfig`, and `s3` settings.
+See [config.example.yaml](config.example.yaml) and [configuration docs](https://aeltai.github.io/rancher-migrate/configuration/).
 
-## S3
+## Development
 
 ```bash
-rancher-migrate s3 pull migrations/source-full.tar.gz -o ./backups/in.tar.gz
-rancher-migrate s3 push ./backups/sanitized.tar.gz migrations/out.tar.gz
+make build
+make test
+make test-cover
+make lint
+make docs-serve   # local docs at http://127.0.0.1:8000
 ```
 
 ## Data hygiene
 
 **Never commit** backup tarballs, sanitize logs, kubeconfigs, or credentials. The `.gitignore` blocks common patterns; keep production backups local only.
 
-## Build
-
-```bash
-make build          # → bin/rancher-migrate
-make test
-make man-view       # man page
-```
-
 ## License
 
-Apache-2.0 (or your choice — add LICENSE if needed)
+Apache-2.0 — see [LICENSE](LICENSE).

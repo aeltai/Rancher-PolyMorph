@@ -14,26 +14,26 @@ type ResourceBucket struct {
 
 // TreeGroup is a cluster (or global/local) bucket in the backup tree.
 type TreeGroup struct {
-	Key          string
-	Label        string
-	DisplayName  string
-	Kind         string
-	Disposition  string // "keep" or "remove"
-	Count        int
+	Key           string
+	Label         string
+	DisplayName   string
+	Kind          string
+	Disposition   string // "keep" or "remove"
+	Count         int
 	ResourceTypes []ResourceBucket
-	SamplePaths  []string
+	SamplePaths   []string
 }
 
 // PreviewResult is a dry-run classification of backup members.
 type PreviewResult struct {
-	InputPath     string
-	MemberCount   int
-	Groups        []TreeGroup
-	TotalKept     int
-	TotalRemoved  int
-	RemoveIDs     map[string]struct{}
-	AutoOrphans   []string
-	Mode          string // "inventory" or "sanitize"
+	InputPath    string
+	MemberCount  int
+	Groups       []TreeGroup
+	TotalKept    int
+	TotalRemoved int
+	RemoveIDs    map[string]struct{}
+	AutoOrphans  []string
+	Mode         string // "inventory" or "sanitize"
 }
 
 // PreviewSanitize classifies every tar member as kept or removed without writing output.

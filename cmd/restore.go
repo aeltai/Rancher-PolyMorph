@@ -131,9 +131,9 @@ Requires kubectl and a valid kubeconfig for the restore target cluster.`,
 
 func restoreApplyCmd() *cobra.Command {
 	var (
-		kubeconfig   string
-		backupFile   string
-		watch        bool
+		kubeconfig string
+		backupFile string
+		watch      bool
 	)
 	cmd := &cobra.Command{
 		Use:   "apply",

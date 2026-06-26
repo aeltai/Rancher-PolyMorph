@@ -58,11 +58,11 @@ func (l *Logger) write(level, format string, args ...any) {
 	}
 }
 
-func (l *Logger) Info(format string, args ...any)    { l.write("INFO", format, args...) }
-func (l *Logger) Warn(format string, args ...any)    { l.write("WARN", format, args...) }
-func (l *Logger) Error(format string, args ...any)   { l.write("ERROR", format, args...) }
-func (l *Logger) OK(format string, args ...any)      { l.write("OK", format, args...) }
-func (l *Logger) Step(format string, args ...any)    { l.write("STEP", format, args...) }
+func (l *Logger) Info(format string, args ...any)  { l.write("INFO", format, args...) }
+func (l *Logger) Warn(format string, args ...any)  { l.write("WARN", format, args...) }
+func (l *Logger) Error(format string, args ...any) { l.write("ERROR", format, args...) }
+func (l *Logger) OK(format string, args ...any)    { l.write("OK", format, args...) }
+func (l *Logger) Step(format string, args ...any)  { l.write("STEP", format, args...) }
 
 func (l *Logger) Debug(format string, args ...any) {
 	if l.verbose {

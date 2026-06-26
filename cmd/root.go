@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aeltai/rancher-migrate/internal/version"
 	"github.com/spf13/cobra"
 )
-
-const version = "0.4.0"
 
 func Root() *cobra.Command {
 	loadAppConfig()
@@ -27,7 +26,7 @@ Migration flow:
 
 Run 'rancher-migrate ui' for the interactive wizard.
 Configure defaults via rancher-migrate.yaml (see: config init).`,
-		Version:      version,
+		Version:      version.Version,
 		SilenceUsage: true,
 	}
 

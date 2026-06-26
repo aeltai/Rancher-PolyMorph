@@ -101,21 +101,21 @@ type model struct {
 	splashAt      time.Time
 	animations    bool
 
-	menu         list.Model
-	modeList     list.Model
-	sourceList   list.Model
-	s3KeyList    list.Model
+	menu           list.Model
+	modeList       list.Model
+	sourceList     list.Model
+	s3KeyList      list.Model
 	postActionList list.Model
-	input        textinput.Model
-	outputInput  textinput.Model
-	reportInput  textinput.Model
-	outputFocus  int // 0=output, 1=report
+	input          textinput.Model
+	outputInput    textinput.Model
+	reportInput    textinput.Model
+	outputFocus    int // 0=output, 1=report
 
-	spinner   spinner.Model
-	inspect      *backup.InspectResult
-	inspectTree  *backup.PreviewResult
-	result       *backup.Result
-	backupPath string
+	spinner     spinner.Model
+	inspect     *backup.InspectResult
+	inspectTree *backup.PreviewResult
+	result      *backup.Result
+	backupPath  string
 
 	keepRKE1Only bool
 	fast         bool
@@ -912,10 +912,10 @@ func (m model) previewOptions() backup.Options {
 
 func (m model) previewOptionsForRKE1() backup.Options {
 	opts := backup.Options{
-		Input:        m.backupPath,
-		KeepRKE1Only: true,
+		Input:         m.backupPath,
+		KeepRKE1Only:  true,
 		NoAutoOrphans: !m.autoOrphans,
-		InspectOnly:  true,
+		InspectOnly:   true,
 	}
 	return opts
 }

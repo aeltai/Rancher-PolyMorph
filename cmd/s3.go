@@ -27,10 +27,10 @@ rancher-migrate.yaml under s3:.`,
 
 func s3PullCmd() *cobra.Command {
 	var (
-		output string
-		bucket string
-		region string
-		prefix string
+		output  string
+		bucket  string
+		region  string
+		prefix  string
 		profile string
 	)
 	cmd := &cobra.Command{

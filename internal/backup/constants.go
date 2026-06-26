@@ -7,14 +7,14 @@ const (
 )
 
 var LocalExactPaths = map[string]struct{}{
-	"clusters.management.cattle.io#v3/local.json":                                                         {},
-	"namespaces.#v1/local.json":                                                                           {},
-	"namespaces.#v1/fleet-local.json":                                                                     {},
-	"namespaces.#v1/cattle-fleet-local-system.json":                                                       {},
-	"fleetworkspaces.management.cattle.io#v3/fleet-local.json":                                            {},
-	"clusterroles.rbac.authorization.k8s.io#v1/local-clusterowner.json":                                 {},
+	"clusters.management.cattle.io#v3/local.json":                                                              {},
+	"namespaces.#v1/local.json":                                                                                {},
+	"namespaces.#v1/fleet-local.json":                                                                          {},
+	"namespaces.#v1/cattle-fleet-local-system.json":                                                            {},
+	"fleetworkspaces.management.cattle.io#v3/fleet-local.json":                                                 {},
+	"clusterroles.rbac.authorization.k8s.io#v1/local-clusterowner.json":                                        {},
 	"clusterrolebindings.rbac.authorization.k8s.io#v1/cattle-fleet-local-system-fleet-agent-role-binding.json": {},
-	"clusterroles.rbac.authorization.k8s.io#v1/cattle-fleet-local-system-fleet-agent-role.json":         {},
+	"clusterroles.rbac.authorization.k8s.io#v1/cattle-fleet-local-system-fleet-agent-role.json":                {},
 }
 
 var LocalSubstrings = []string{

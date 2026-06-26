@@ -1,0 +1,70 @@
+site_name: rancher-migrate
+site_description: Sanitize Rancher backups and migrate to a new management cluster
+site_url: https://aeltai.github.io/rancher-migrate/
+repo_url: https://github.com/aeltai/rancher-migrate
+repo_name: aeltai/rancher-migrate
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Migration guide: migration.md
+  - Configuration: configuration.md
+  - Commands:
+      - Overview: commands/index.md
+      - sanitize: commands/sanitize.md
+      - inspect: commands/inspect.md
+      - restore: commands/restore.md
+      - s3: commands/s3.md
+      - ui: commands/ui.md
+      - config: commands/config.md
+  - TUI wizard: tui.md
+  - Concepts:
+      - Backup anatomy: concepts/backup-anatomy.md
+      - Keep vs drop: concepts/keep-drop.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/aeltai/rancher-migrate

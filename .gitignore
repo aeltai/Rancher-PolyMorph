@@ -44,6 +44,8 @@ terraform/*.tfvars
 
 # Go
 tools/rancher-migrate/vendor/
+coverage.out
+site/
 
 # OS / editor
 .DS_Store
