@@ -7,9 +7,9 @@ This guide covers the **backup → sanitize → restore** path for moving Ranche
 | Step | Tool / action |
 |------|----------------|
 | 1 | Full backup on **source** Rancher (rancher-backup operator) |
-| 2 | `rancher-migrate inspect --tree` — review inventory |
-| 3 | `rancher-migrate sanitize --keep-cluster <id>` |
-| 4 | `rancher-migrate restore run` on **target** cluster |
+| 2 | `rancher-polymorph inspect --tree` — review inventory |
+| 3 | `rancher-polymorph sanitize --keep-cluster <id>` |
+| 4 | `rancher-polymorph restore run` on **target** cluster |
 | 5 | Install cert-manager + Rancher Helm on target |
 | 6 | Reconnect downstream cluster agents to new Rancher URL |
 
@@ -21,7 +21,7 @@ The supported migration patterns are:
 1. **Dual Rancher (backup/restore)** — sanitize backup to keep RKE1 cluster definitions; restore on new mgmt; point agents at new URL.
 2. **Per-cluster import** — export projects/RBAC, detach/cleanup, import on target (separate runbook).
 
-`rancher-migrate` focuses on pattern **1**.
+`rancher-polymorph` focuses on pattern **1**.
 
 !!! note
     After restore, downstream RKE1 nodes still run Kubernetes — you must update
@@ -32,9 +32,9 @@ The supported migration patterns are:
 If backups live in S3:
 
 ```bash
-rancher-migrate s3 pull migrations/source-full.tar.gz -o ./backups/in.tar.gz
-rancher-migrate sanitize -i ./backups/in.tar.gz -o ./backups/out.tar.gz --keep-cluster c-xxxxx
-rancher-migrate s3 push ./backups/out.tar.gz migrations/sanitized.tar.gz
+rancher-polymorph s3 pull migrations/source-full.tar.gz -o ./backups/in.tar.gz
+rancher-polymorph sanitize -i ./backups/in.tar.gz -o ./backups/out.tar.gz --keep-cluster c-xxxxx
+rancher-polymorph s3 push ./backups/out.tar.gz migrations/sanitized.tar.gz
 ```
 
 Or use the TUI: **Full migration → Download from S3**.

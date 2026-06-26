@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/aeltai/rancher-migrate/internal/config"
+	"github.com/aeltai/rancher-polymorph/internal/config"
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.org/x/term"
 )
@@ -12,7 +12,7 @@ import (
 // Run starts the interactive TUI. Requires a terminal (stdout is a TTY).
 func Run() error {
 	if !term.IsTerminal(int(os.Stdout.Fd())) {
-		return fmt.Errorf("interactive UI requires a terminal; use subcommands instead (rancher-migrate --help)")
+		return fmt.Errorf("interactive UI requires a terminal; use subcommands instead (rancher-polymorph --help)")
 	}
 	cfg, _, _ := config.Load()
 	m := newModel(cfg)

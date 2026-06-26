@@ -10,10 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//go:embed manual/rancher-migrate.1
+//go:embed manual/rancher-polymorph.1
 var manPageROFF string
 
-//go:embed manual/rancher-migrate.txt
+//go:embed manual/rancher-polymorph.txt
 var manPageText string
 
 func manualCmd() *cobra.Command {
@@ -21,14 +21,14 @@ func manualCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "manual [topic]",
-		Short: "Show the rancher-migrate manual (man page)",
-		Long: `Display the rancher-migrate manual. Without a topic, shows the full manual.
+		Short: "Show the rancher-polymorph manual (man page)",
+		Long: `Display the rancher-polymorph manual. Without a topic, shows the full manual.
 
 Topics: sanitize, inspect, restore, migration`,
 		Example: strings.TrimSpace(`
-  rancher-migrate manual
-  rancher-migrate manual sanitize
-  man -l cmd/manual/rancher-migrate.1`),
+  rancher-polymorph manual
+  rancher-polymorph manual sanitize
+  man -l cmd/manual/rancher-polymorph.1`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			topic := ""
 			if len(args) > 0 {
@@ -80,7 +80,7 @@ func filterManual(topic string) string {
 		}
 	}
 	if b.Len() == 0 {
-		return fmt.Sprintf("No manual section for %q. Run: rancher-migrate manual\n", topic)
+		return fmt.Sprintf("No manual section for %q. Run: rancher-polymorph manual\n", topic)
 	}
 	return b.String()
 }

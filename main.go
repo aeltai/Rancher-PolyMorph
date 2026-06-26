@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/aeltai/rancher-migrate/cmd"
-	"github.com/aeltai/rancher-migrate/internal/tui"
+	"github.com/aeltai/rancher-polymorph/cmd"
+	"github.com/aeltai/rancher-polymorph/internal/tui"
 	"golang.org/x/term"
 )
 

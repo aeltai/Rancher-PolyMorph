@@ -19,30 +19,30 @@
     git clone https://github.com/aeltai/Rancher-PolyMorph.git
     cd Rancher-PolyMorph
     make build
-    ./bin/rancher-migrate --version
+    ./bin/rancher-polymorph --version
     ```
 
 === "Release binary"
 
-    Download `rancher-migrate` for your platform from
+    Download `rancher-polymorph` for your platform from
     [GitHub Releases](https://github.com/aeltai/Rancher-PolyMorph/releases).
 
 ## First run
 
 ```bash
 # Write default config
-./bin/rancher-migrate config init
+./bin/rancher-polymorph config init
 
 # Interactive wizard (recommended)
-./bin/rancher-migrate ui
+./bin/rancher-polymorph ui
 
 # Or inspect a backup first
-./bin/rancher-migrate inspect -i /path/to/full-backup.tar.gz
+./bin/rancher-polymorph inspect -i /path/to/full-backup.tar.gz
 ```
 
 ## Configure
 
-Edit `~/.config/rancher-migrate/rancher-migrate.yaml` (see [Configuration](configuration.md)):
+Edit `~/.config/rancher-polymorph/rancher-polymorph.yaml` (see [Configuration](configuration.md)):
 
 - `defaults.keep_cluster` — default cluster ID for sanitize/TUI
 - `restore.kubeconfig` — target cluster kubeconfig

@@ -31,7 +31,7 @@ support-bundle*/
 
 # Build output
 bin/
-tools/rancher-migrate/cmd/manual/rancher-migrate.1.gz
+tools/rancher-polymorph/cmd/manual/rancher-polymorph.1.gz
 
 # Terraform state and local config (may contain secrets)
 terraform/terraform.tfstate
@@ -43,7 +43,7 @@ terraform/*.tfvars
 !terraform/terraform.tfvars.example
 
 # Go
-tools/rancher-migrate/vendor/
+tools/rancher-polymorph/vendor/
 coverage.out
 site/
 

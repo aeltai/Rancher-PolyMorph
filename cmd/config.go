@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aeltai/rancher-migrate/internal/config"
+	"github.com/aeltai/rancher-polymorph/internal/config"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -25,7 +25,7 @@ func loadAppConfig() {
 func configCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "Show or initialize rancher-migrate configuration",
+		Short: "Show or initialize rancher-polymorph configuration",
 	}
 
 	cmd.AddCommand(configShowCmd())
@@ -66,7 +66,7 @@ func configInitCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				path = filepath.Join(home, ".config", "rancher-migrate", config.FileName)
+				path = filepath.Join(home, ".config", "rancher-polymorph", config.FileName)
 			}
 			if _, err := os.Stat(path); err == nil {
 				return fmt.Errorf("%s already exists (use --path to choose another file)", path)
@@ -79,7 +79,7 @@ func configInitCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&path, "path", "", "Config file path (default ~/.config/rancher-migrate/rancher-migrate.yaml)")
+	cmd.Flags().StringVar(&path, "path", "", "Config file path (default ~/.config/rancher-polymorph/rancher-polymorph.yaml)")
 	return cmd
 }
 

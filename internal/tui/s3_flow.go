@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/aeltai/rancher-migrate/internal/config"
-	"github.com/aeltai/rancher-migrate/internal/s3store"
+	"github.com/aeltai/rancher-polymorph/internal/config"
+	"github.com/aeltai/rancher-polymorph/internal/s3store"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )

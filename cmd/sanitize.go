@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aeltai/rancher-migrate/internal/backup"
+	"github.com/aeltai/rancher-polymorph/internal/backup"
 	"github.com/spf13/cobra"
 )
 
@@ -42,21 +42,21 @@ backups to review inventory and ghosts before sanitizing.
 Progress and phase logs go to stderr (or --log-file). A summary box is printed
 to stdout; per-path details are written to --report when set.
 
-See also: rancher-migrate manual sanitize`,
+See also: rancher-polymorph manual sanitize`,
 		Example: strings.TrimSpace(`
   # Keep one RKE1 cluster for migration restore
-  rancher-migrate sanitize \
+  rancher-polymorph sanitize \
     --input backups/source-full.tar.gz \
     --output backups/sanitized.tar.gz \
     --keep-cluster c-aaaaa \
     --report backups/sanitize-report.txt
 
   # Fast pass with verbose logging
-  rancher-migrate sanitize -i in.tar.gz -o out.tar.gz --keep-cluster c-aaaaa \
+  rancher-polymorph sanitize -i in.tar.gz -o out.tar.gz --keep-cluster c-aaaaa \
     --fast --verbose --log-file sanitize.log
 
   # Strip explicit orphan ghosts found by inspect
-  rancher-migrate sanitize -i in.tar.gz -o out.tar.gz --keep-cluster c-aaaaa \
+  rancher-polymorph sanitize -i in.tar.gz -o out.tar.gz --keep-cluster c-aaaaa \
     --remove-cluster c-ghost1 --remove-cluster c-ghost2`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			loadAppConfig()

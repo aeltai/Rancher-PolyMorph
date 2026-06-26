@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aeltai/rancher-migrate/internal/backup"
-	"github.com/aeltai/rancher-migrate/internal/config"
+	"github.com/aeltai/rancher-polymorph/internal/backup"
+	"github.com/aeltai/rancher-polymorph/internal/config"
 )
 
 type Client struct {

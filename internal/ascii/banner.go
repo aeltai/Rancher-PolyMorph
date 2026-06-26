@@ -9,7 +9,7 @@ func SplashFrame(now time.Time, width int, started time.Time) string {
 
 // CompactHeader for in-app title bar.
 func CompactHeader() string {
-	return styleLabel.Render("◆ RANCHER") + styleSubtitle.Render(" // ") + styleTitle.Render("MIGRATE")
+	return styleLabel.Render("◆ RANCHER") + styleSubtitle.Render(" // ") + styleTitle.Render("POLYMORPH")
 }
 
 // ProgressLoader returns a loading bar for operation progress (0–1).

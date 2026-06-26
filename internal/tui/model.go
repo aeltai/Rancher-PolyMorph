@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aeltai/rancher-migrate/internal/ascii"
-	"github.com/aeltai/rancher-migrate/internal/backup"
-	"github.com/aeltai/rancher-migrate/internal/config"
+	"github.com/aeltai/rancher-polymorph/internal/ascii"
+	"github.com/aeltai/rancher-polymorph/internal/backup"
+	"github.com/aeltai/rancher-polymorph/internal/config"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -147,7 +147,7 @@ func newModel(cfg config.Config) model {
 		menuItem{"Pull from S3", "Download backup .tar.gz to local backups/"},
 		menuItem{"Inspect only", "Read-only inventory tree"},
 		menuItem{"Restore to cluster", "kubectl cp + Restore CR + wait for Ready"},
-		menuItem{"Quit", "Exit rancher-migrate"},
+		menuItem{"Quit", "Exit rancher-polymorph"},
 	}
 	menu := list.New(menuItems, list.NewDefaultDelegate(), 0, 0)
 	menu.Title = "What would you like to do?"
@@ -460,7 +460,7 @@ func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.flow = flowS3Pull
 		m.err = ""
 		if !s3Configured(m.cfg) {
-			m.err = "s3.bucket not set — configure rancher-migrate.yaml"
+			m.err = "s3.bucket not set — configure rancher-polymorph.yaml"
 			return m, nil
 		}
 		m.screen = screenLoading
@@ -500,7 +500,7 @@ func (m model) updateRestoreInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		if m.cfg.Restore.Kubeconfig == "" {
-			m.err = "restore.kubeconfig not set — run: rancher-migrate config init"
+			m.err = "restore.kubeconfig not set — run: rancher-polymorph config init"
 			return m, nil
 		}
 		m.restoreLocal = path
@@ -975,7 +975,7 @@ func (m model) View() string {
 		b.WriteString("\n\n")
 		kc := m.cfg.Restore.Kubeconfig
 		if kc == "" {
-			kc = "(not set — run: rancher-migrate config init)"
+			kc = "(not set — run: rancher-polymorph config init)"
 		}
 		b.WriteString(fmt.Sprintf("Kubeconfig: %s\n", kc))
 		b.WriteString(fmt.Sprintf("Operator:   %s  label: %s\n", m.cfg.Restore.OperatorNamespace, m.cfg.Restore.BackupPodLabel))

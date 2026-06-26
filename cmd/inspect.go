@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aeltai/rancher-migrate/internal/backup"
+	"github.com/aeltai/rancher-polymorph/internal/backup"
 	"github.com/spf13/cobra"
 )
 
@@ -27,9 +27,9 @@ orphan "ghost" cluster IDs referenced in paths but missing from management.
 Use --tree to show the full backup inventory (clusters, local artifacts, global).
 Add --keep-cluster to preview keep/drop before sanitizing.`,
 		Example: strings.TrimSpace(`
-  rancher-migrate inspect --input backups/source-full.tar.gz
-  rancher-migrate inspect -i backup.tar.gz --tree
-  rancher-migrate inspect -i backup.tar.gz --tree --keep-cluster c-aaaaa`),
+  rancher-polymorph inspect --input backups/source-full.tar.gz
+  rancher-polymorph inspect -i backup.tar.gz --tree
+  rancher-polymorph inspect -i backup.tar.gz --tree --keep-cluster c-aaaaa`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if showTree {
 				if keepCluster != "" || len(keepClusters) > 0 || keepRKE1Only {

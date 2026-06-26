@@ -10,8 +10,10 @@ import (
 )
 
 const (
-	EnvConfigPath = "RANCHER_MIGRATE_CONFIG"
-	FileName      = "rancher-migrate.yaml"
+	EnvConfigPath       = "RANCHER_POLYMPH_CONFIG"
+	EnvConfigPathLegacy = "RANCHER_MIGRATE_CONFIG"
+	FileName            = "rancher-polymorph.yaml"
+	FileNameLegacy      = "rancher-migrate.yaml"
 )
 
 // Config holds user defaults for sanitize, restore, and S3.
@@ -98,16 +100,23 @@ func ExampleYAML() string {
 
 func SearchPaths() []string {
 	var paths []string
-	if p := os.Getenv(EnvConfigPath); p != "" {
-		paths = append(paths, p)
+	for _, env := range []string{EnvConfigPath, EnvConfigPathLegacy} {
+		if p := os.Getenv(env); p != "" {
+			paths = append(paths, p)
+		}
 	}
 	if wd, err := os.Getwd(); err == nil {
-		paths = append(paths, filepath.Join(wd, FileName))
+		paths = append(paths,
+			filepath.Join(wd, FileName),
+			filepath.Join(wd, FileNameLegacy),
+		)
 	}
 	if home, err := os.UserHomeDir(); err == nil {
 		paths = append(paths,
-			filepath.Join(home, ".config", "rancher-migrate", FileName),
+			filepath.Join(home, ".config", "rancher-polymorph", FileName),
+			filepath.Join(home, ".config", "rancher-migrate", FileNameLegacy),
 			filepath.Join(home, "."+FileName),
+			filepath.Join(home, "."+FileNameLegacy),
 		)
 	}
 	return paths

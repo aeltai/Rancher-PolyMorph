@@ -27,7 +27,7 @@ jobs:
         run: go test ./... -count=1 -coverprofile=coverage.out
 
       - name: Build
-        run: go build -o bin/rancher-migrate .
+        run: go build -o bin/rancher-polymorph .
 
   lint:
     runs-on: ubuntu-latest

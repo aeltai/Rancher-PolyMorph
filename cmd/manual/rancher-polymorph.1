@@ -1,28 +1,28 @@
-.TH RANCHER-MIGRATE 1 "June 2026" "rancher-migrate 0.2.0" "User Commands"
+.TH RANCHER-POLYMPH 1 "June 2026" "rancher-polymorph 0.2.0" "User Commands"
 .SH NAME
-rancher-migrate \- sanitize Rancher backups for migration to a new cluster
+rancher-polymorph \- sanitize Rancher backups for migration to a new cluster
 .SH SYNOPSIS
-.B rancher-migrate
+.B rancher-polymorph
 [\fIglobal flags\fR] <command> [command flags]
 .PP
-.B rancher-migrate sanitize
+.B rancher-polymorph sanitize
 .B \-i
 \fIINPUT\fR
 .B \-o
 \fIOUTPUT\fR [options]
 .br
-.B rancher-migrate inspect
+.B rancher-polymorph inspect
 .B \-i
 \fIINPUT\fR
 .br
-.B rancher-migrate restore plan
+.B rancher-polymorph restore plan
 .B \-b
 \fIBACKUP_FILE\fR [options]
 .br
-.B rancher-migrate manual
+.B rancher-polymorph manual
 [\fItopic\fR]
 .SH DESCRIPTION
-.B rancher-migrate
+.B rancher-polymorph
 filters full Rancher backup tarballs so they can be restored on a new management cluster without carrying local-cluster state, removed downstream clusters, or Fleet ghost artifacts.
 .PP
 Progress and phase logs are written to stderr (or \fB\-\-log\-file\fR). Command results use a summary box on stdout; use \fB\-\-report\fR for the full list of removed paths.
@@ -56,13 +56,13 @@ Print the manual; topics: sanitize, inspect, restore, migration.
 .IP 1. 3
 Take a full backup on the source Rancher.
 .IP 2.
-\fBrancher-migrate inspect \-i backup.tar.gz\fR
+\fBrancher-polymorph inspect \-i backup.tar.gz\fR
 .IP 3.
-\fBrancher-migrate sanitize \-i backup.tar.gz \-o sanitized.tar.gz \-\-keep-cluster CLUSTER_ID \-\-report report.txt\fR
+\fBrancher-polymorph sanitize \-i backup.tar.gz \-o sanitized.tar.gz \-\-keep-cluster CLUSTER_ID \-\-report report.txt\fR
 .IP 4.
 Copy sanitized tarball to the restore target storage/PVC.
 .IP 5.
-\fBrancher-migrate restore plan \-b sanitized.tar.gz \-o restore.yaml\fR
+\fBrancher-polymorph restore plan \-b sanitized.tar.gz \-o restore.yaml\fR
 .IP 6.
 Apply restore.yaml while Rancher is NOT running.
 .IP 7.
@@ -98,6 +98,6 @@ Extended documentation in this repository.
 .SH ENVIRONMENT
 .TP
 .B PAGER
-Used by \fBrancher-migrate manual \-p\fR (default: less).
+Used by \fBrancher-polymorph manual \-p\fR (default: less).
 .SH SEE ALSO
 .BR sanitize-backup-for-restore.py (1)

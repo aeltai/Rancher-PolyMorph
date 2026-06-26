@@ -3,10 +3,10 @@
 Interactive terminal wizard for the full migration flow.
 
 ```bash
-rancher-migrate ui
+rancher-polymorph ui
 ```
 
-Running `rancher-migrate` with **no arguments** in a TTY also launches the UI.
+Running `rancher-polymorph` with **no arguments** in a TTY also launches the UI.
 
 ## Menu
 

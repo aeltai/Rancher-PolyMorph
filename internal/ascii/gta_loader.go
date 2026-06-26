@@ -37,7 +37,7 @@ var (
 
 func init() {
 	titleFiglet = strings.TrimRight(figure.NewFigure("RANCHER", "slant", true).String(), "\n")
-	subtitleFiglet = strings.TrimRight(figure.NewFigure("MIGRATE", "standard", true).String(), "\n")
+	subtitleFiglet = strings.TrimRight(figure.NewFigure("POLYMORPH", "standard", true).String(), "\n")
 
 	gold := lipgloss.Color("#F0A030")
 	goldBright := lipgloss.Color("#FFD060")

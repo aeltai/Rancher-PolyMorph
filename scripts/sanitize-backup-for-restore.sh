@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Produce a sanitized Rancher backup tarball for migration restore.
 #
-# Prefers the Go CLI (rancher-migrate), then Python, then legacy bash/tar.
+# Prefers the Go CLI (rancher-polymorph), then Python, then legacy bash/tar.
 #
 # Usage:
 #   ./scripts/sanitize-backup-for-restore.sh \
@@ -14,7 +14,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-GO_BIN="${REPO_ROOT}/bin/rancher-migrate"
+GO_BIN="${REPO_ROOT}/bin/rancher-polymorph"
 PY_SCRIPT="${SCRIPT_DIR}/sanitize-backup-for-restore.py"
 
 usage() {
@@ -36,7 +36,7 @@ Optional:
   --quiet                Suppress progress on stderr
   --bash-only            Force slow bash/tar implementation (no Go/Python)
 
-Build Go CLI: make build  → bin/rancher-migrate
+Build Go CLI: make build  → bin/rancher-polymorph
 EOF
 }
 

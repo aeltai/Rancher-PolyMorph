@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Release](https://img.shields.io/github/v/release/aeltai/Rancher-PolyMorph)](https://github.com/aeltai/Rancher-PolyMorph/releases)
 
-**Rancher PolyMorph** is a CLI (`rancher-migrate`) for sanitizing Rancher backup tarballs and **migrating Rancher to a new management cluster** (backup → sanitize → restore).
+**Rancher PolyMorph** is a CLI (`rancher-polymorph`) for sanitizing Rancher backup tarballs and **migrating Rancher to a new management cluster** (backup → sanitize → restore).
 
 📖 **Documentation:** [docs/](docs/) · [https://aeltai.github.io/Rancher-PolyMorph/](https://aeltai.github.io/Rancher-PolyMorph/)
 
@@ -16,7 +16,7 @@
 - **ui** — interactive wizard: S3 pull, sanitize, full migration (source → sanitize → restore), restore watch
 - **s3** — pull/push backup tarballs
 - **restore** — copy tarball to operator pod, apply Restore CR via kubeconfig
-- **config** — defaults in `rancher-migrate.yaml`
+- **config** — defaults in `rancher-polymorph.yaml`
 
 ## Quick start
 
@@ -25,12 +25,12 @@ git clone https://github.com/aeltai/Rancher-PolyMorph.git
 cd Rancher-PolyMorph
 make build
 
-./bin/rancher-migrate config init
-./bin/rancher-migrate ui
+./bin/rancher-polymorph config init
+./bin/rancher-polymorph ui
 
 # Or non-interactive:
-./bin/rancher-migrate inspect -i ./backups/source-full.tar.gz --tree
-./bin/rancher-migrate sanitize \
+./bin/rancher-polymorph inspect -i ./backups/source-full.tar.gz --tree
+./bin/rancher-polymorph sanitize \
   -i ./backups/source-full.tar.gz \
   -o ./backups/sanitized.tar.gz \
   --keep-cluster c-xxxxx \
@@ -40,8 +40,8 @@ make build
 ## Migration flow
 
 1. Full backup on source Rancher
-2. `rancher-migrate sanitize` → single-cluster tarball
-3. `rancher-migrate restore run --local ./backups/sanitized.tar.gz` (target kubeconfig in config)
+2. `rancher-polymorph sanitize` → single-cluster tarball
+3. `rancher-polymorph restore run --local ./backups/sanitized.tar.gz` (target kubeconfig in config)
 4. Install cert-manager + Rancher Helm after restore completes
 5. Reconnect downstream RKE1 agents
 
@@ -50,7 +50,7 @@ See the [migration guide](https://aeltai.github.io/Rancher-PolyMorph/migration/)
 ## Configuration
 
 ```bash
-rancher-migrate config init   # ~/.config/rancher-migrate/rancher-migrate.yaml
+rancher-polymorph config init   # ~/.config/rancher-polymorph/rancher-polymorph.yaml
 ```
 
 See [config.example.yaml](config.example.yaml) and [configuration docs](https://aeltai.github.io/Rancher-PolyMorph/configuration/).

@@ -11,8 +11,8 @@ Copy a sanitized tarball to the rancher-backup operator pod and apply a Restore 
 ## Usage
 
 ```bash
-rancher-migrate restore run --local ./backups/sanitized.tar.gz
-rancher-migrate restore status
+rancher-polymorph restore run --local ./backups/sanitized.tar.gz
+rancher-polymorph restore status
 ```
 
 ## What it does

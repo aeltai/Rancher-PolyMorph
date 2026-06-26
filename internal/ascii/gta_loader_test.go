@@ -15,8 +15,11 @@ func TestGTASplashRenders(t *testing.T) {
 	if !strings.Contains(out, "LOADING") {
 		t.Fatal("expected loading label")
 	}
-	if strings.Contains(out, "rockstar") {
-		t.Fatal("rockstar tagline should be removed")
+	if strings.TrimSpace(subtitleFiglet) == "" {
+		t.Fatal("expected subtitle figlet")
+	}
+	if !strings.Contains(CompactHeader(), "POLYMORPH") {
+		t.Fatal("expected POLYMORPH in compact header")
 	}
 	if strings.Contains(out, "moo") {
 		t.Fatal("cow ascii should be gone")

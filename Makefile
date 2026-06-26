@@ -1,12 +1,12 @@
 .PHONY: build test test-cover test-race lint install clean man man-view docs docs-serve
 
-BINARY := rancher-migrate
+BINARY := rancher-polymorph
 OUT_DIR := ./bin
-MAN_SRC := cmd/manual/rancher-migrate.1
+MAN_SRC := cmd/manual/rancher-polymorph.1
 VERSION := $(shell grep 'Version = ' internal/version/version.go | cut -d'"' -f2)
 
 build:
-	go build -ldflags "-s -w -X github.com/aeltai/rancher-migrate/internal/version.Version=$(VERSION)" \
+	go build -ldflags "-s -w -X github.com/aeltai/rancher-polymorph/internal/version.Version=$(VERSION)" \
 		-o $(OUT_DIR)/$(BINARY) .
 
 install: build
@@ -40,4 +40,4 @@ docs-serve:
 	mkdocs serve
 
 clean:
-	rm -f $(OUT_DIR)/$(BINARY) $(MAN_SRC).gz coverage.out
+	rm -f $(OUT_DIR)/$(BINARY) $(OUT_DIR)/rancher-polymorph $(MAN_SRC).gz coverage.out

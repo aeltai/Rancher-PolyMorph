@@ -46,7 +46,7 @@ See [Rancher: migrate to a new cluster](https://ranchermanager.docs.rancher.com/
 
 | Script / binary | Use |
 |-----------------|-----|
-| **`bin/rancher-migrate`** | **Recommended Go CLI.** `sanitize`, `inspect`, `restore`, `s3`, `ui`. Build: `make build` |
+| **`bin/rancher-polymorph`** | **Recommended Go CLI.** `sanitize`, `inspect`, `restore`, `s3`, `ui`. Build: `make build` |
 | **`scripts/sanitize-backup-for-restore.py`** | Python implementation (parity with Go). Stdlib only. |
 | **`scripts/sanitize-backup-for-restore.sh`** | Wrapper: Go → Python → legacy bash. |
 
@@ -63,17 +63,17 @@ See [Rancher: migrate to a new cluster](https://ranchermanager.docs.rancher.com/
 ### Build the Go CLI (recommended)
 
 ```bash
-cd ~/rancher-migrate
+cd ~/rancher-polymorph
 make build
-./bin/rancher-migrate --help
+./bin/rancher-polymorph --help
 ```
 
 ### Keep a single downstream cluster (most common)
 
 ```bash
-cd ~/rancher-migrate
+cd ~/rancher-polymorph
 
-./bin/rancher-migrate sanitize \
+./bin/rancher-polymorph sanitize \
   --input backups/source-full-backup.tar.gz \
   --output backups/sanitized-single-cluster.tar.gz \
   --keep-cluster c-aaaaa \
@@ -106,13 +106,13 @@ Find the cluster ID in the Rancher UI (Cluster → Config) or from the report's 
 ### Inspect a backup (no changes)
 
 ```bash
-./bin/rancher-migrate inspect --input backups/source-full-backup.tar.gz
+./bin/rancher-polymorph inspect --input backups/source-full-backup.tar.gz
 ```
 
 ### Generate Restore CR manifest
 
 ```bash
-./bin/rancher-migrate restore plan \
+./bin/rancher-polymorph restore plan \
   --name rancher-restore \
   --backup-file sanitized-single-cluster.tar.gz \
   --output manifests/restore.yaml
@@ -451,7 +451,7 @@ After sanitizing:
 
 | Path | Purpose |
 |------|---------|
-| `bin/rancher-migrate` | Go CLI binary (build with `make build`) |
+| `bin/rancher-polymorph` | Go CLI binary (build with `make build`) |
 | `cmd/`, `internal/`, `main.go` | Go CLI source |
 | `scripts/sanitize-backup-for-restore.py` | Python implementation |
 | `scripts/sanitize-backup-for-restore.sh` | Wrapper / legacy fallback |

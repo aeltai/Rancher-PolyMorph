@@ -72,7 +72,7 @@ func (m model) updateSourceSelect(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, textinput.Blink
 	case 1:
 		if !s3Configured(m.cfg) {
-			m.err = "s3.bucket not set — configure rancher-migrate.yaml (s3 section)"
+			m.err = "s3.bucket not set — configure rancher-polymorph.yaml (s3 section)"
 			return m, nil
 		}
 		m.screen = screenLoading
@@ -138,7 +138,7 @@ func (m model) startRestoreFromResult() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	if m.cfg.Restore.Kubeconfig == "" {
-		m.err = "restore.kubeconfig not set — run: rancher-migrate config init"
+		m.err = "restore.kubeconfig not set — run: rancher-polymorph config init"
 		return m, nil
 	}
 	m.restoreLocal = path

@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aeltai/rancher-migrate/internal/config"
-	"github.com/aeltai/rancher-migrate/internal/s3store"
+	"github.com/aeltai/rancher-polymorph/internal/config"
+	"github.com/aeltai/rancher-polymorph/internal/s3store"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +17,7 @@ func s3Cmd() *cobra.Command {
 		Short: "Download or upload backup tarballs via S3",
 		Long: `S3 helpers for backup/restore workflows. Credentials use the default AWS
 chain (env vars, ~/.aws/credentials, IAM role). Configure defaults in
-rancher-migrate.yaml under s3:.`,
+rancher-polymorph.yaml under s3:.`,
 	}
 	cmd.AddCommand(s3PullCmd())
 	cmd.AddCommand(s3PushCmd())
@@ -37,8 +37,8 @@ func s3PullCmd() *cobra.Command {
 		Use:   "pull KEY_OR_URI",
 		Short: "Download a backup from S3",
 		Example: strings.TrimSpace(`
-  rancher-migrate s3 pull migrations/source-full.tar.gz -o ./backups/in.tar.gz
-  rancher-migrate s3 pull s3://my-bucket/migrations/source-full.tar.gz -o in.tar.gz`),
+  rancher-polymorph s3 pull migrations/source-full.tar.gz -o ./backups/in.tar.gz
+  rancher-polymorph s3 pull s3://my-bucket/migrations/source-full.tar.gz -o in.tar.gz`),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			loadAppConfig()
@@ -78,8 +78,8 @@ func s3PushCmd() *cobra.Command {
 		Use:   "push LOCAL_PATH [KEY_OR_URI]",
 		Short: "Upload a backup tarball to S3",
 		Example: strings.TrimSpace(`
-  rancher-migrate s3 push ./backups/sanitized.tar.gz migrations/sanitized.tar.gz
-  rancher-migrate s3 push ./sanitized.tar.gz s3://bucket/migrations/sanitized.tar.gz`),
+  rancher-polymorph s3 push ./backups/sanitized.tar.gz migrations/sanitized.tar.gz
+  rancher-polymorph s3 push ./sanitized.tar.gz s3://bucket/migrations/sanitized.tar.gz`),
 		Args: cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			loadAppConfig()

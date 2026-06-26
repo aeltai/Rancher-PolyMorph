@@ -28,16 +28,16 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          OUT="rancher-migrate_${VERSION}_${GOOS}_${GOARCH}"
-          go build -ldflags "-s -w -X github.com/aeltai/rancher-migrate/internal/version.Version=${VERSION}" \
+          OUT="rancher-polymorph_${VERSION}_${GOOS}_${GOARCH}"
+          go build -ldflags "-s -w -X github.com/aeltai/rancher-polymorph/internal/version.Version=${VERSION}" \
             -o "${OUT}" .
           tar czf "${OUT}.tar.gz" "${OUT}"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: rancher-migrate-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: rancher-migrate_*.tar.gz
+          name: rancher-polymorph-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: rancher-polymorph_*.tar.gz
 
   github-release:
     needs: release

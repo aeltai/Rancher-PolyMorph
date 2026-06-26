@@ -5,9 +5,9 @@ Read-only analysis of a Rancher backup tarball.
 ## Usage
 
 ```bash
-rancher-migrate inspect -i ./backups/source-full.tar.gz
-rancher-migrate inspect -i ./backups/source-full.tar.gz --tree
-rancher-migrate inspect -i ./backups/source-full.tar.gz --tree --keep-cluster c-xxxxx
+rancher-polymorph inspect -i ./backups/source-full.tar.gz
+rancher-polymorph inspect -i ./backups/source-full.tar.gz --tree
+rancher-polymorph inspect -i ./backups/source-full.tar.gz --tree --keep-cluster c-xxxxx
 ```
 
 ## Output

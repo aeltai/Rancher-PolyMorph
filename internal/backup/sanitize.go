@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aeltai/rancher-migrate/internal/ui"
+	"github.com/aeltai/rancher-polymorph/internal/ui"
 )
 
 func Sanitize(opts Options) (*Result, error) {

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aeltai/rancher-migrate/internal/config"
-	"github.com/aeltai/rancher-migrate/internal/k8s"
+	"github.com/aeltai/rancher-polymorph/internal/config"
+	"github.com/aeltai/rancher-polymorph/internal/k8s"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

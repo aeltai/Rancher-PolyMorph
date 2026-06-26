@@ -1,18 +1,18 @@
 # Configuration
 
-Configuration file: `rancher-migrate.yaml`
+Configuration file: `rancher-polymorph.yaml`
 
 Search order:
 
-1. `$RANCHER_MIGRATE_CONFIG`
-2. `./rancher-migrate.yaml` (current directory)
-3. `~/.config/rancher-migrate/rancher-migrate.yaml`
-4. `~/.rancher-migrate.yaml`
+1. `$RANCHER_POLYMPH_CONFIG`
+2. `./rancher-polymorph.yaml` (current directory)
+3. `~/.config/rancher-polymorph/rancher-polymorph.yaml`
+4. `~/.rancher-polymorph.yaml`
 
 ## Initialize
 
 ```bash
-rancher-migrate config init
+rancher-polymorph config init
 ```
 
 ## Example

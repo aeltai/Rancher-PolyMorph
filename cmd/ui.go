@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/aeltai/rancher-migrate/internal/tui"
+	"github.com/aeltai/rancher-polymorph/internal/tui"
 	"github.com/spf13/cobra"
 )
 

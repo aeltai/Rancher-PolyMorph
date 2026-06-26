@@ -1,7 +1,7 @@
 # Example configuration — copy to one of:
-#   ./rancher-migrate.yaml
-#   ~/.config/rancher-migrate/rancher-migrate.yaml
-# Or set RANCHER_MIGRATE_CONFIG=/path/to/file
+#   ./rancher-polymorph.yaml
+#   ~/.config/rancher-polymorph/rancher-polymorph.yaml
+# Or set RANCHER_POLYMPH_CONFIG=/path/to/file
 
 defaults:
   keep_cluster: ""          # e.g. c-aaaaa — default for sanitize / TUI

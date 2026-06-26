@@ -5,7 +5,7 @@ Filter a full Rancher backup tarball to keep only selected downstream cluster(s)
 ## Usage
 
 ```bash
-rancher-migrate sanitize \
+rancher-polymorph sanitize \
   --input ./backups/source-full.tar.gz \
   --output ./backups/sanitized.tar.gz \
   --keep-cluster c-xxxxx \

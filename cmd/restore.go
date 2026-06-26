@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aeltai/rancher-migrate/internal/ascii"
-	"github.com/aeltai/rancher-migrate/internal/backup"
-	"github.com/aeltai/rancher-migrate/internal/k8s"
+	"github.com/aeltai/rancher-polymorph/internal/ascii"
+	"github.com/aeltai/rancher-polymorph/internal/backup"
+	"github.com/aeltai/rancher-polymorph/internal/k8s"
 	"github.com/spf13/cobra"
 )
 
@@ -46,7 +46,7 @@ to a new cluster with prune: false (per Rancher documentation).
 Apply while Rancher is NOT running; install cert-manager and Rancher Helm
 after the restore completes.`,
 		Example: strings.TrimSpace(`
-  rancher-migrate restore plan \
+  rancher-polymorph restore plan \
     --backup-file sanitized-backup.tar.gz \
     --output restore-cr.yaml`),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -98,7 +98,7 @@ func restoreCopyCmd() *cobra.Command {
 		Long: `Uses kubectl cp to place the tarball on the backup operator PVC path.
 Requires kubectl and a valid kubeconfig for the restore target cluster.`,
 		Example: strings.TrimSpace(`
-  rancher-migrate restore copy --local ./backups/sanitized.tar.gz`),
+  rancher-polymorph restore copy --local ./backups/sanitized.tar.gz`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			loadAppConfig()
 			rc := appConfig.Restore
@@ -139,7 +139,7 @@ func restoreApplyCmd() *cobra.Command {
 		Use:   "apply",
 		Short: "Apply Restore CR on target cluster",
 		Example: strings.TrimSpace(`
-  rancher-migrate restore apply --backup-file sanitized.tar.gz --watch`),
+  rancher-polymorph restore apply --backup-file sanitized.tar.gz --watch`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			loadAppConfig()
 			rc := appConfig.Restore
@@ -209,7 +209,7 @@ func restoreRunCmd() *cobra.Command {
 		Long: `End-to-end restore kickoff: kubectl cp → Restore CR apply → optional watch.
 Rancher must NOT be running on the target cluster.`,
 		Example: strings.TrimSpace(`
-  rancher-migrate restore run --local ./backups/sanitized.tar.gz --watch`),
+  rancher-polymorph restore run --local ./backups/sanitized.tar.gz --watch`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			loadAppConfig()
 			rc := appConfig.Restore
@@ -217,7 +217,7 @@ Rancher must NOT be running on the target cluster.`,
 				rc.Kubeconfig = kubeconfig
 			}
 			if rc.Kubeconfig == "" {
-				return fmt.Errorf("kubeconfig required: rancher-migrate config init")
+				return fmt.Errorf("kubeconfig required: rancher-polymorph config init")
 			}
 			fmt.Println(ascii.CompactHeader())
 			client := k8s.NewClient(rc)
@@ -238,7 +238,7 @@ Rancher must NOT be running on the target cluster.`,
 				fmt.Fprintln(os.Stderr, "Watching restore…")
 				return client.WatchRestore(ctx, rc)
 			}
-			fmt.Fprintln(os.Stderr, "Done. Check: rancher-migrate restore status")
+			fmt.Fprintln(os.Stderr, "Done. Check: rancher-polymorph restore status")
 			return nil
 		},
 	}

@@ -4,12 +4,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aeltai/rancher-migrate/internal/version"
+	"github.com/aeltai/rancher-polymorph/internal/version"
 )
 
 func TestRootCommand(t *testing.T) {
 	root := Root()
-	if root.Use != "rancher-migrate" {
+	if root.Use != "rancher-polymorph" {
 		t.Fatalf("use=%q", root.Use)
 	}
 	if root.Version != version.Version {

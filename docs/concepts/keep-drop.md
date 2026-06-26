@@ -1,6 +1,6 @@
 # Keep vs drop
 
-When you run `sanitize --keep-cluster c-xxxxx`, `rancher-migrate` classifies every tar member:
+When you run `sanitize --keep-cluster c-xxxxx`, `rancher-polymorph` classifies every tar member:
 
 | Disposition | Meaning |
 |-------------|---------|
@@ -30,7 +30,7 @@ When you run `sanitize --keep-cluster c-xxxxx`, `rancher-migrate` classifies eve
 ## Preview before running
 
 ```bash
-rancher-migrate inspect -i full.tar.gz --tree --keep-cluster c-xxxxx
+rancher-polymorph inspect -i full.tar.gz --tree --keep-cluster c-xxxxx
 ```
 
 Or use the TUI tree preview (before/after tabs).

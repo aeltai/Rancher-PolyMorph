@@ -2,7 +2,7 @@
 
 **Sanitize Rancher backup tarballs and migrate Rancher to a new management cluster.**
 
-Rancher PolyMorph (`rancher-migrate`) filters full Rancher backups down to the downstream cluster(s) you want to keep, strips local-cluster artifacts that would conflict on restore, and drives the **rancher-backup** restore flow on a target cluster.
+Rancher PolyMorph (`rancher-polymorph`) filters full Rancher backups down to the downstream cluster(s) you want to keep, strips local-cluster artifacts that would conflict on restore, and drives the **rancher-backup** restore flow on a target cluster.
 
 [:octicons-arrow-right-24: Getting started](getting-started.md){ .md-button .md-button--primary }
 [:octicons-mark-github-16: GitHub](https://github.com/aeltai/Rancher-PolyMorph){ .md-button }
@@ -31,14 +31,14 @@ Moving Rancher management to a new cluster (backup → restore) requires a **san
 git clone https://github.com/aeltai/Rancher-PolyMorph.git
 cd Rancher-PolyMorph && make build
 
-rancher-migrate inspect -i ./backups/source-full.tar.gz --tree
-rancher-migrate sanitize \
+rancher-polymorph inspect -i ./backups/source-full.tar.gz --tree
+rancher-polymorph sanitize \
   -i ./backups/source-full.tar.gz \
   -o ./backups/sanitized.tar.gz \
   --keep-cluster c-xxxxx \
   --report ./backups/report.txt
 
-rancher-migrate restore run --local ./backups/sanitized.tar.gz
+rancher-polymorph restore run --local ./backups/sanitized.tar.gz
 ```
 
 ## Migration flow

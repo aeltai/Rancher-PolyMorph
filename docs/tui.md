@@ -1,6 +1,6 @@
 # TUI wizard
 
-The interactive UI (`rancher-migrate ui`) guides you through backup inspection, cluster selection, sanitization, and optional restore.
+The interactive UI (`rancher-polymorph ui`) guides you through backup inspection, cluster selection, sanitization, and optional restore.
 
 ## Screens
 

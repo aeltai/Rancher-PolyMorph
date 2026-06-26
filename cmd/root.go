@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aeltai/rancher-migrate/internal/version"
+	"github.com/aeltai/rancher-polymorph/internal/version"
 	"github.com/spf13/cobra"
 )
 
@@ -12,25 +12,25 @@ func Root() *cobra.Command {
 	loadAppConfig()
 
 	root := &cobra.Command{
-		Use:   "rancher-migrate",
+		Use:   "rancher-polymorph",
 		Short: "Rancher PolyMorph — backup sanitize and migration to a new cluster",
-		Long: `Rancher PolyMorph (rancher-migrate) — CLI for sanitizing Rancher backup tarballs before restore
+		Long: `Rancher PolyMorph (rancher-polymorph) — CLI for sanitizing Rancher backup tarballs before restore
 on a new management cluster, inspecting backups, and generating Restore CR manifests.
 
 Migration flow:
-  1. config init     — write ~/.config/rancher-migrate/rancher-migrate.yaml
+  1. config init     — write ~/.config/rancher-polymorph/rancher-polymorph.yaml
   2. s3 pull         — download full backup (optional)
   3. inspect/sanitize — single-cluster tarball
   4. restore run     — copy to operator pod + apply Restore CR (kubeconfig)
   5. Install cert-manager + Rancher Helm after restore completes
 
-Run 'rancher-migrate ui' for the interactive wizard.
-Configure defaults via rancher-migrate.yaml (see: config init).`,
+Run 'rancher-polymorph ui' for the interactive wizard.
+Configure defaults via rancher-polymorph.yaml (see: config init).`,
 		Version:      version.Version,
 		SilenceUsage: true,
 	}
 
-	root.SetVersionTemplate("rancher-migrate version {{.Version}}\n")
+	root.SetVersionTemplate("rancher-polymorph version {{.Version}}\n")
 	root.CompletionOptions.DisableDefaultCmd = false
 
 	root.PersistentFlags().BoolVarP(&globalVerbose, "verbose", "v", false, "Verbose stderr/log-file diagnostics")
@@ -89,7 +89,7 @@ func formatHelp(cmd *cobra.Command) string {
 			b.WriteString(fmt.Sprintf("  %-16s %s\n", c.Name(), c.Short))
 		}
 	}
-	b.WriteString("\nSee 'rancher-migrate manual' for the full manual.\n")
+	b.WriteString("\nSee 'rancher-polymorph manual' for the full manual.\n")
 	return b.String()
 }
 

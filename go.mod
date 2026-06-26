@@ -1,4 +1,4 @@
-module github.com/aeltai/rancher-migrate
+module github.com/aeltai/rancher-polymorph
 
 go 1.25.0
 

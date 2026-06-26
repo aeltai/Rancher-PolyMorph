@@ -1,25 +1,25 @@
-RANCHER-MIGRATE(1)              User Commands              RANCHER-MIGRATE(1)
+RANCHER-POLYMPH(1)              User Commands              RANCHER-POLYMPH(1)
 
 NAME
-       rancher-migrate - sanitize Rancher backups for migration to a new cluster
+       rancher-polymorph - sanitize Rancher backups for migration to a new cluster
 
 SYNOPSIS
-       rancher-migrate [global flags] <command> [command flags]
+       rancher-polymorph [global flags] <command> [command flags]
 
-       rancher-migrate sanitize -i INPUT -o OUTPUT [options]
-       rancher-migrate inspect -i INPUT
-       rancher-migrate restore plan -b BACKUP_FILE [options]
-       rancher-migrate manual [topic]
-       rancher-migrate ui
+       rancher-polymorph sanitize -i INPUT -o OUTPUT [options]
+       rancher-polymorph inspect -i INPUT
+       rancher-polymorph restore plan -b BACKUP_FILE [options]
+       rancher-polymorph manual [topic]
+       rancher-polymorph ui
 
 DESCRIPTION
-       rancher-migrate filters full Rancher backup tarballs so they can be
+       rancher-polymorph filters full Rancher backup tarballs so they can be
        restored on a new management cluster without carrying
        local-cluster state, removed downstream clusters, or Fleet ghost
        artifacts.
 
        With no arguments in a terminal, launches the interactive UI (same as
-       rancher-migrate ui). Progress and phase logs are written to stderr
+       rancher-polymorph ui). Progress and phase logs are written to stderr
        (or --log-file) in CLI mode.
 
 GLOBAL FLAGS
@@ -60,11 +60,11 @@ TOPIC: migration
        MIGRATION FLOW (high level)
 
        1. Take a full backup on the source Rancher.
-       2. rancher-migrate ui   (or inspect -i backup.tar.gz)
+       2. rancher-polymorph ui   (or inspect -i backup.tar.gz)
        3. Follow the wizard, or: sanitize -i backup.tar.gz -o sanitized.tar.gz \
             --keep-cluster CLUSTER_ID --report report.txt
        4. Copy sanitized tarball to the restore target storage/PVC.
-       5. rancher-migrate restore plan -b sanitized.tar.gz -o restore.yaml
+       5. rancher-polymorph restore plan -b sanitized.tar.gz -o restore.yaml
        6. Apply restore.yaml while Rancher is NOT running.
        7. Install cert-manager and Rancher Helm; reconnect RKE1 agents.
 
@@ -92,7 +92,7 @@ TOPIC: sanitize
          --quiet               No progress bar or stderr logs.
 
        Example:
-         rancher-migrate sanitize \
+         rancher-polymorph sanitize \
            -i backups/source-full.tar.gz \
            -o backups/sanitized.tar.gz \
            --keep-cluster c-aaaaa \
@@ -109,7 +109,7 @@ TOPIC: inspect
        referencing c-xxxxx without a management cluster definition).
 
        Example:
-         rancher-migrate inspect -i backups/source-full.tar.gz
+         rancher-polymorph inspect -i backups/source-full.tar.gz
 
 TOPIC: restore
        RESTORE PLAN
@@ -123,21 +123,21 @@ TOPIC: restore
          --storage-secret      S3 credential secret for storageLocation.
 
        Example:
-         rancher-migrate restore plan \
+         rancher-polymorph restore plan \
            -b sanitized.tar.gz -o restore-cr.yaml
 
 FILES
        docs/sanitize-backup-for-restore.md
               Extended documentation for the Python and Go sanitizers.
 
-       manual/rancher-migrate.1
-              Troff source for this page (man -l manual/rancher-migrate.1).
+       manual/rancher-polymorph.1
+              Troff source for this page (man -l manual/rancher-polymorph.1).
 
 ENVIRONMENT
-       PAGER  Used by 'rancher-migrate manual -p' (default: less).
+       PAGER  Used by 'rancher-polymorph manual -p' (default: less).
 
 SEE ALSO
        sanitize-backup-for-restore.py(1)  (wrapper prefers this binary)
 
 AUTHOR
-       rancher-migrate — backup sanitize and migration CLI
+       rancher-polymorph — backup sanitize and migration CLI

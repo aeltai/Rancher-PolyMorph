@@ -1,10 +1,10 @@
 # config
 
-Manage `rancher-migrate.yaml` defaults.
+Manage `rancher-polymorph.yaml` defaults.
 
 ```bash
-rancher-migrate config init    # write ~/.config/rancher-migrate/rancher-migrate.yaml
-rancher-migrate config show    # print effective config
+rancher-polymorph config init    # write ~/.config/rancher-polymorph/rancher-polymorph.yaml
+rancher-polymorph config show    # print effective config
 ```
 
 See [Configuration](../configuration.md).

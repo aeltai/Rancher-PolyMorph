@@ -7,7 +7,7 @@
 | [`restore`](restore.md) | Copy tarball + apply Restore CR |
 | [`s3`](s3.md) | Pull/push backups from S3 |
 | [`ui`](ui.md) | Interactive TUI wizard |
-| [`config`](config.md) | Manage `rancher-migrate.yaml` |
+| [`config`](config.md) | Manage `rancher-polymorph.yaml` |
 | `manual` | Full CLI manual (man-page style) |
 
 Global flags: `--verbose`, `--quiet`
