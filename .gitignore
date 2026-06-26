@@ -1,0 +1,61 @@
+# --- Local backup data (never commit) ---
+backups/**
+!backups/.gitkeep
+!backups/README.md
+
+*.tar.gz
+*.tar
+*.tgz
+
+# Logs and sanitize reports (may contain cluster names / paths)
+*.log
+sanitize-report*.txt
+sanitize-progress*.log
+log-*.txt
+
+# Credentials and cluster access
+kubeconfigs/
+*.pem
+*.key
+*.crt
+*.p12
+*.kubeconfig
+.env
+.env.*
+secrets/
+
+# Support bundles (production dumps)
+support-bundle-extract/
+support-bundle-yamls/
+support-bundle*/
+
+# Build output
+bin/
+tools/rancher-migrate/cmd/manual/rancher-migrate.1.gz
+
+# Terraform state and local config (may contain secrets)
+terraform/terraform.tfstate
+terraform/terraform.tfstate.*
+terraform/terraform.tfvars
+terraform/tfplan
+terraform/.terraform/
+terraform/*.tfvars
+!terraform/terraform.tfvars.example
+
+# Go
+tools/rancher-migrate/vendor/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Accidental CLI flag files (empty touch artifacts)
+--*
+
+# Misc local test artifacts
+test.tar.gz
+asdas.tar.gz

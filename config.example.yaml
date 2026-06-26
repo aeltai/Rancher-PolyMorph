@@ -1,0 +1,37 @@
+# Example configuration — copy to one of:
+#   ./rancher-migrate.yaml
+#   ~/.config/rancher-migrate/rancher-migrate.yaml
+# Or set RANCHER_MIGRATE_CONFIG=/path/to/file
+
+defaults:
+  keep_cluster: ""          # e.g. c-aaaaa — default for sanitize / TUI
+  keep_rke1_only: false
+  fast: true
+  output_dir: ./backups
+  report_dir: ./backups
+  log_dir: ./backups
+  auto_orphans: true
+  compress_level: 3
+
+restore:
+  kubeconfig: ~/.kube/target-rancher.yaml
+  context: ""               # optional kubectl context override
+  namespace: cattle-resources-system
+  operator_namespace: cattle-resources-system
+  backup_pod_label: app.kubernetes.io/name=rancher-backup
+  backup_container_path: /var/lib/rancher-backup
+  restore_name: rancher-restore
+  encryption_secret: ""     # if backup was encrypted
+  storage_secret: ""        # S3 credential secret for Restore CR
+  watch_timeout: 30m
+
+s3:
+  region: eu-central-1
+  bucket: my-rancher-backups
+  prefix: migrations/
+  profile: default
+  endpoint: ""              # optional MinIO endpoint
+
+ui:
+  animations: true
+  theme: default

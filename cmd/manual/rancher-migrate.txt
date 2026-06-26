@@ -1,0 +1,143 @@
+RANCHER-MIGRATE(1)              User Commands              RANCHER-MIGRATE(1)
+
+NAME
+       rancher-migrate - sanitize Rancher backups for migration to a new cluster
+
+SYNOPSIS
+       rancher-migrate [global flags] <command> [command flags]
+
+       rancher-migrate sanitize -i INPUT -o OUTPUT [options]
+       rancher-migrate inspect -i INPUT
+       rancher-migrate restore plan -b BACKUP_FILE [options]
+       rancher-migrate manual [topic]
+       rancher-migrate ui
+
+DESCRIPTION
+       rancher-migrate filters full Rancher backup tarballs so they can be
+       restored on a new management cluster without carrying
+       local-cluster state, removed downstream clusters, or Fleet ghost
+       artifacts.
+
+       With no arguments in a terminal, launches the interactive UI (same as
+       rancher-migrate ui). Progress and phase logs are written to stderr
+       (or --log-file) in CLI mode.
+
+GLOBAL FLAGS
+       -v, --verbose
+              Extra DEBUG lines on stderr / log file.
+
+       -q, --quiet
+              Suppress progress bar and stderr logs.
+
+       -h, --help
+              Show command help.
+
+       --version
+              Print version and exit.
+
+COMMANDS
+       sanitize
+              Filter backup tarball (see TOPIC: sanitize below).
+
+       inspect
+              Read-only backup analysis (see TOPIC: inspect below).
+
+       restore plan
+              Emit Restore CR YAML with prune: false.
+
+       manual [topic]
+              Print this manual; topics: sanitize, inspect, restore,
+              migration.
+
+       ui
+              Interactive terminal wizard (aliases: interactive, tui).
+              Requires a TTY.
+
+       completion
+              Generate shell completion (bash/zsh/fish).
+
+TOPIC: migration
+       MIGRATION FLOW (high level)
+
+       1. Take a full backup on the source Rancher.
+       2. rancher-migrate ui   (or inspect -i backup.tar.gz)
+       3. Follow the wizard, or: sanitize -i backup.tar.gz -o sanitized.tar.gz \
+            --keep-cluster CLUSTER_ID --report report.txt
+       4. Copy sanitized tarball to the restore target storage/PVC.
+       5. rancher-migrate restore plan -b sanitized.tar.gz -o restore.yaml
+       6. Apply restore.yaml while Rancher is NOT running.
+       7. Install cert-manager and Rancher Helm; reconnect RKE1 agents.
+
+       See docs/sanitize-backup-for-restore.md in this repository.
+
+TOPIC: sanitize
+       SANITIZE
+
+       Required: --input / -i, --output / -o
+
+       Cluster selection (one required):
+         --keep-cluster ID     Keep one downstream cluster; remove all others.
+         --keep-rke1-only      Keep every RKE1 cluster in the backup.
+
+       Orphan / Fleet cleanup:
+         --remove-cluster ID   Also strip this ID (repeatable).
+         --no-auto-orphans     Disable ghost ID auto-detection.
+
+       Output / performance:
+         --report / -r PATH    Full report with every removed path.
+         --log-file PATH       Timestamped log file.
+         --compress-level N    gzip 1-9 (default 3).
+         --fast                gzip level 1.
+         --full                Always print full report to stdout.
+         --quiet               No progress bar or stderr logs.
+
+       Example:
+         rancher-migrate sanitize \
+           -i backups/source-full.tar.gz \
+           -o backups/sanitized.tar.gz \
+           --keep-cluster c-aaaaa \
+           --report backups/report.txt \
+           --log-file backups/sanitize.log
+
+TOPIC: inspect
+       INSPECT
+
+       Required: --input / -i
+
+       Reports cluster inventory, Fleet mapping counts, fleet-default JSON
+       files, local-cluster references, and ghost cluster IDs (paths
+       referencing c-xxxxx without a management cluster definition).
+
+       Example:
+         rancher-migrate inspect -i backups/source-full.tar.gz
+
+TOPIC: restore
+       RESTORE PLAN
+
+       Required: --backup-file / -b
+
+       Optional:
+         --name NAME           Restore CR name (default rancher-restore).
+         --output / -o PATH    Write YAML to file.
+         --encryption-secret   encryptionConfigSecretName.
+         --storage-secret      S3 credential secret for storageLocation.
+
+       Example:
+         rancher-migrate restore plan \
+           -b sanitized.tar.gz -o restore-cr.yaml
+
+FILES
+       docs/sanitize-backup-for-restore.md
+              Extended documentation for the Python and Go sanitizers.
+
+       manual/rancher-migrate.1
+              Troff source for this page (man -l manual/rancher-migrate.1).
+
+ENVIRONMENT
+       PAGER  Used by 'rancher-migrate manual -p' (default: less).
+
+SEE ALSO
+       sanitize-backup-for-restore.py(1)  (wrapper prefers this binary)
+
+AUTHOR
+       rancher-migrate — backup sanitize and migration CLI

@@ -1,0 +1,103 @@
+.TH RANCHER-MIGRATE 1 "June 2026" "rancher-migrate 0.2.0" "User Commands"
+.SH NAME
+rancher-migrate \- sanitize Rancher backups for migration to a new cluster
+.SH SYNOPSIS
+.B rancher-migrate
+[\fIglobal flags\fR] <command> [command flags]
+.PP
+.B rancher-migrate sanitize
+.B \-i
+\fIINPUT\fR
+.B \-o
+\fIOUTPUT\fR [options]
+.br
+.B rancher-migrate inspect
+.B \-i
+\fIINPUT\fR
+.br
+.B rancher-migrate restore plan
+.B \-b
+\fIBACKUP_FILE\fR [options]
+.br
+.B rancher-migrate manual
+[\fItopic\fR]
+.SH DESCRIPTION
+.B rancher-migrate
+filters full Rancher backup tarballs so they can be restored on a new management cluster without carrying local-cluster state, removed downstream clusters, or Fleet ghost artifacts.
+.PP
+Progress and phase logs are written to stderr (or \fB\-\-log\-file\fR). Command results use a summary box on stdout; use \fB\-\-report\fR for the full list of removed paths.
+.SH GLOBAL FLAGS
+.TP
+.BR \-v ", " \-\-verbose
+Extra DEBUG lines on stderr / log file.
+.TP
+.BR \-q ", " \-\-quiet
+Suppress progress bar and stderr logs.
+.TP
+.BR \-h ", " \-\-help
+Show command help.
+.TP
+.B \-\-version
+Print version and exit.
+.SH COMMANDS
+.TP
+.B sanitize
+Filter backup tarball (see \fBSANITIZE\fR).
+.TP
+.B inspect
+Read-only backup analysis (see \fBINSPECT\fR).
+.TP
+.B restore plan
+Emit Restore CR YAML with \fBprune: false\fR.
+.TP
+.B manual
+Print the manual; topics: sanitize, inspect, restore, migration.
+.SH MIGRATION FLOW
+.IP 1. 3
+Take a full backup on the source Rancher.
+.IP 2.
+\fBrancher-migrate inspect \-i backup.tar.gz\fR
+.IP 3.
+\fBrancher-migrate sanitize \-i backup.tar.gz \-o sanitized.tar.gz \-\-keep-cluster CLUSTER_ID \-\-report report.txt\fR
+.IP 4.
+Copy sanitized tarball to the restore target storage/PVC.
+.IP 5.
+\fBrancher-migrate restore plan \-b sanitized.tar.gz \-o restore.yaml\fR
+.IP 6.
+Apply restore.yaml while Rancher is NOT running.
+.IP 7.
+Install cert-manager and Rancher Helm; reconnect RKE1 agents.
+.SH SANITIZE
+Required: \fB\-\-input\fR / \fB\-i\fR, \fB\-\-output\fR / \fB\-o\fR
+.PP
+Cluster selection (one required):
+.RS
+.IP \(bu 3
+\fB\-\-keep-cluster\fR \fIID\fR \(em keep one downstream cluster
+.IP \(bu
+\fB\-\-keep\-rke1\-only\fR \(em keep every RKE1 cluster
+.RE
+.PP
+Orphan / Fleet cleanup:
+.RS
+.IP \(bu 3
+\fB\-\-remove\-cluster\fR \fIID\fR (repeatable)
+.IP \(bu
+\fB\-\-no\-auto\-orphans\fR
+.RE
+.SH INSPECT
+Required: \fB\-\-input\fR / \fB\-i\fR
+.PP
+Reports cluster inventory, Fleet mappings, ghost cluster IDs, and local-cluster references.
+.SH RESTORE PLAN
+Required: \fB\-\-backup\-file\fR / \fB\-b\fR
+.SH FILES
+.TP
+docs/sanitize-backup-for-restore.md
+Extended documentation in this repository.
+.SH ENVIRONMENT
+.TP
+.B PAGER
+Used by \fBrancher-migrate manual \-p\fR (default: less).
+.SH SEE ALSO
+.BR sanitize-backup-for-restore.py (1)
