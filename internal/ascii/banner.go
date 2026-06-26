@@ -1,72 +1,18 @@
 package ascii
 
-import (
-	"strings"
-	"time"
-)
+import "time"
 
-// Logo is the static rancher-migrate banner.
-const Logo = `
- ██████╗  █████╗ ███╗   ██╗ ██████╗██╗  ██╗███████╗██████╗       ███╗   ███╗██╗ ██████╗ ██████╗  █████╗ ████████╗███████╗
- ██╔══██╗██╔══██╗████╗  ██║██╔════╝██║  ██║██╔════╝██╔══██╗      ████╗ ████║██║██╔════╝ ██╔══██╗██╔══██╗╚══██╔══╝██╔════╝
- ██████╔╝███████║██╔██╗ ██║██║     ███████║█████╗  ██████╔╝█████╗██╔████╔██║██║██║  ███╗██████╔╝███████║   ██║   █████╗
- ██╔══██╗██╔══██║██║╚██╗██║██║     ██╔══██║██╔══╝  ██╔══██╗╚════╝██║╚██╔╝██║██║██║   ██║██╔══██╗██╔══██║   ██║   ██╔══╝
- ██║  ██║██║  ██║██║ ╚████║╚██████╗██║  ██║███████╗██║  ██║      ██║ ╚═╝ ██║██║╚██████╔╝██║  ██║██║  ██║   ██║   ███████╗
- ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝     ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
-`
-
-var taglines = []string{
-	"backup → sanitize → restore",
-	"migrate Rancher to a new cluster",
-	"strip ghosts · keep clusters · ship it",
-}
-
-var herdFrames = []string{
-	`
-    \\___/          \\___/
-   (  o o )  --->  (  o o )
-   /   V   \\       /   V   \\
-`,
-	`
-    \\___/          \\___/
-   (  ^ o )  --->  (  o ^ )
-   /   V   \\       /   V   \\
-`,
-	`
-    \\___/          \\___/
-   (  o o )  --->  (  o o )
-   /   V   \\       /   V   \\
-      moo!             migrate!
-`,
-}
-
-var spinnerFrames = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
-
-// SplashFrame returns an animated splash screen for the TUI.
-func SplashFrame(t time.Time) string {
-	frame := int(t.UnixMilli()/180) % len(herdFrames)
-	spin := spinnerFrames[int(t.UnixMilli()/80)%len(spinnerFrames)]
-	tag := taglines[int(t.UnixMilli()/900)%len(taglines)]
-
-	var b strings.Builder
-	b.WriteString(Logo)
-	b.WriteString("\n")
-	b.WriteString("  ")
-	b.WriteString(spin)
-	b.WriteString("  ")
-	b.WriteString(tag)
-	b.WriteString("\n")
-	b.WriteString(herdFrames[frame])
-	return b.String()
+// SplashFrame returns the animated splash screen for the TUI.
+func SplashFrame(now time.Time, width int, started time.Time) string {
+	return GTASplash(now, width, started)
 }
 
 // CompactHeader for in-app title bar.
 func CompactHeader() string {
-	return "◈ rancher-migrate ◈  backup · sanitize · restore · s3 · k8s"
+	return styleLabel.Render("◆ RANCHER") + styleSubtitle.Render(" // ") + styleTitle.Render("MIGRATE")
 }
 
-// ProgressCow small inline ASCII animation.
-func ProgressCow(t time.Time) string {
-	frames := []string{"(o_o)", "(^o^)", ">-moo->", "=-cow=-"}
-	return frames[int(t.UnixMilli()/250)%len(frames)]
+// ProgressLoader returns a loading bar for operation progress (0–1).
+func ProgressLoader(progress float64, width int, t time.Time) string {
+	return GTALoadingBar(progress, width, t, false)
 }

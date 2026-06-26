@@ -5,8 +5,8 @@ CLI for sanitizing Rancher backup tarballs and **migrating Rancher to a new mana
 ## Features
 
 - **sanitize** — filter full backups to one cluster (or all RKE1); strip local cluster, Fleet ghosts, orphans
-- **inspect** — read-only backup analysis
-- **ui** — interactive wizard with ASCII splash
+- **inspect** — read-only backup analysis; `--tree` previews keep/drop layout
+- **ui** — interactive wizard: S3 pull, sanitize, full migration (source → sanitize → restore), restore watch
 - **s3** — pull/push backup tarballs
 - **restore** — copy tarball to operator pod, apply Restore CR via kubeconfig
 - **config** — defaults in `rancher-migrate.yaml`
@@ -39,6 +39,24 @@ make build
 5. Reconnect downstream RKE1 agents
 
 See [docs/sanitize-backup-for-restore.md](docs/sanitize-backup-for-restore.md).
+
+## TUI (`rancher-migrate ui`)
+
+Configure `rancher-migrate.yaml` first (`config init`). The menu covers the full migration path:
+
+| Menu item | What it does |
+|-----------|----------------|
+| **Full migration** | Pick **local file** or **S3** → inspect → cluster filter → sanitize → **Restore to cluster now** (kubectl cp + Restore CR + wait for Ready) |
+| **Sanitize backup** | Local file only — inspect, filter, write sanitized tarball |
+| **Pull from S3** | List `.tar.gz` in `s3.bucket` → download to `defaults.output_dir` → **enter** to sanitize |
+| **Inspect only** | Read-only inventory tree |
+| **Restore to cluster** | Point at an existing sanitized `.tar.gz` → copy to operator pod → apply Restore CR → poll until Ready |
+
+**S3** requires `s3.bucket`, `region`, and optional `prefix` / `profile` in config.
+
+**Restore** requires `restore.kubeconfig`, `operator_namespace`, `backup_pod_label`, and `backup_container_path` (see `config.example.yaml`). The TUI runs the same steps as `rancher-migrate restore run --local …` and watches the Restore CR until Ready.
+
+After restore completes, install cert-manager and Rancher Helm on the target cluster, then reconnect downstream agents.
 
 ## Configuration
 

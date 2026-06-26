@@ -25,6 +25,7 @@ type Options struct {
 	Output         string
 	Report         string
 	KeepCluster    string
+	KeepClusters   []string
 	KeepRKE1Only   bool
 	RemoveClusters []string
 	NoAutoOrphans  bool

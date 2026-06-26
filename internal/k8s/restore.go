@@ -140,6 +140,35 @@ func (c *Client) WatchRestore(ctx context.Context, cfg config.Restore) error {
 	return fmt.Errorf("restore %s/%s not ready within %s", ns, name, timeout)
 }
 
+// RestorePhase returns human status, ready, and failure message from the Restore CR.
+func (c *Client) RestorePhase(ctx context.Context, cfg config.Restore) (status string, ready bool, failed string, err error) {
+	name := firstNonEmpty(cfg.RestoreName, "rancher-restore")
+	ns := firstNonEmpty(cfg.Namespace, "cattle-resources-system")
+	phase, err := c.run(ctx, "get", "restore", name, "-n", ns, "-o", "jsonpath={.status.conditions[?(@.type==\"Ready\")].status},{.status.conditions[?(@.type==\"Ready\")].message}")
+	if err != nil {
+		return "", false, "", err
+	}
+	parts := strings.SplitN(strings.TrimSpace(phase), ",", 2)
+	st := ""
+	if len(parts) > 0 {
+		st = parts[0]
+	}
+	msg := ""
+	if len(parts) > 1 {
+		msg = parts[1]
+	}
+	if st == "True" {
+		return "Ready", true, "", nil
+	}
+	if strings.Contains(strings.ToLower(msg), "error") || strings.Contains(strings.ToLower(msg), "fail") {
+		return msg, false, msg, nil
+	}
+	if msg != "" {
+		return msg, false, "", nil
+	}
+	return "In progress", false, "", nil
+}
+
 // Status prints restore resource status.
 func (c *Client) Status(ctx context.Context, cfg config.Restore) (string, error) {
 	name := firstNonEmpty(cfg.RestoreName, "rancher-restore")

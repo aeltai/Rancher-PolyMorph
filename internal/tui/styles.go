@@ -24,4 +24,16 @@ var (
 
 	focusedStyle = lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderForeground(lipgloss.Color("205"))
 	blurredStyle = lipgloss.NewStyle().BorderStyle(lipgloss.HiddenBorder())
+
+	treeRowSelectedStyle = lipgloss.NewStyle().
+				Bold(true).
+				Foreground(lipgloss.Color("229")).
+				Background(lipgloss.Color("236")).
+				PaddingLeft(1).
+				PaddingRight(1)
+
+	clusterRowSelectedStyle = lipgloss.NewStyle().
+				Bold(true).
+				Foreground(lipgloss.Color("229")).
+				Background(lipgloss.Color("236"))
 )

@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,10 +11,10 @@ import (
 	"github.com/aeltai/rancher-migrate/internal/ascii"
 	"github.com/aeltai/rancher-migrate/internal/backup"
 	"github.com/aeltai/rancher-migrate/internal/config"
-	"github.com/aeltai/rancher-migrate/internal/k8s"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -30,6 +29,7 @@ const (
 	screenInspectView
 	screenMode
 	screenCluster
+	screenTreePreview
 	screenGhosts
 	screenOutput
 	screenConfirm
@@ -37,6 +37,19 @@ const (
 	screenDone
 	screenRestoreInput
 	screenRestoreRunning
+	screenSourceSelect
+	screenS3KeyList
+	screenPostSanitize
+)
+
+type pendingAfterLoad int
+
+const (
+	loadToInspect pendingAfterLoad = iota
+	loadToTreePreview
+	loadToOutput
+	loadToS3List
+	loadToS3Pull
 )
 
 type flow int
@@ -45,6 +58,8 @@ const (
 	flowSanitize flow = iota
 	flowInspectOnly
 	flowRestore
+	flowMigrate
+	flowS3Pull
 )
 
 type menuItem struct {
@@ -55,17 +70,15 @@ func (i menuItem) Title() string       { return i.title }
 func (i menuItem) Description() string { return i.desc }
 func (i menuItem) FilterValue() string { return i.title }
 
-type clusterItem struct {
-	id, display, kind string
+type previewDoneMsg struct {
+	res *backup.PreviewResult
+	err error
 }
 
-func (i clusterItem) Title() string       { return i.id + "  " + i.display }
-func (i clusterItem) Description() string { return "kind=" + i.kind }
-func (i clusterItem) FilterValue() string { return i.id + " " + i.display }
-
 type inspectDoneMsg struct {
-	res *backup.InspectResult
-	err error
+	res  *backup.InspectResult
+	tree *backup.PreviewResult
+	err  error
 }
 
 type sanitizeDoneMsg struct {
@@ -79,11 +92,6 @@ type progressMsg struct {
 
 type splashTickMsg time.Time
 
-type restoreDoneMsg struct {
-	err        error
-	backupName string
-}
-
 type model struct {
 	width, height int
 	screen        screen
@@ -95,20 +103,33 @@ type model struct {
 
 	menu         list.Model
 	modeList     list.Model
-	clusterList  list.Model
+	sourceList   list.Model
+	s3KeyList    list.Model
+	postActionList list.Model
 	input        textinput.Model
 	outputInput  textinput.Model
 	reportInput  textinput.Model
 	outputFocus  int // 0=output, 1=report
 
 	spinner   spinner.Model
-	inspect   *backup.InspectResult
-	result    *backup.Result
+	inspect      *backup.InspectResult
+	inspectTree  *backup.PreviewResult
+	result       *backup.Result
 	backupPath string
 
 	keepRKE1Only bool
 	fast         bool
 	autoOrphans  bool
+
+	clusterCursor   int
+	clusterSelected map[string]bool
+	preview         *backup.PreviewResult
+	previewAfter    *backup.PreviewResult
+	treeViewport    viewport.Model
+	treeExpanded    map[string]bool
+	treeGroupCursor int
+	treeTab         treeTab
+	afterLoad       pendingAfterLoad
 
 	progressCur   int
 	progressTotal int
@@ -116,13 +137,16 @@ type model struct {
 	sanitizeCh    chan tea.Msg
 	restoreLocal  string
 	restoreStatus string
+	restoreCh     chan tea.Msg
 }
 
 func newModel(cfg config.Config) model {
 	menuItems := []list.Item{
-		menuItem{"Sanitize backup", "Guided wizard — inspect, pick cluster, write tarball"},
-		menuItem{"Inspect only", "Read-only analysis of clusters and ghost IDs"},
-		menuItem{"Restore to cluster", "kubectl cp + Restore CR (uses config kubeconfig)"},
+		menuItem{"Full migration", "S3 or local → sanitize → restore on target cluster"},
+		menuItem{"Sanitize backup", "Local file — inspect, filter clusters, write tarball"},
+		menuItem{"Pull from S3", "Download backup .tar.gz to local backups/"},
+		menuItem{"Inspect only", "Read-only inventory tree"},
+		menuItem{"Restore to cluster", "kubectl cp + Restore CR + wait for Ready"},
 		menuItem{"Quit", "Exit rancher-migrate"},
 	}
 	menu := list.New(menuItems, list.NewDefaultDelegate(), 0, 0)
@@ -132,18 +156,13 @@ func newModel(cfg config.Config) model {
 	menu.SetShowHelp(true)
 
 	modeItems := []list.Item{
-		menuItem{"Keep one cluster", "Remove all other downstream clusters (typical migration)"},
+		menuItem{"Keep selected clusters", "Pick one or more downstream clusters to retain"},
 		menuItem{"Keep all RKE1", "Remove imported / RKE2 clusters only"},
 	}
 	modeList := list.New(modeItems, list.NewDefaultDelegate(), 0, 0)
 	modeList.Title = "Cluster retention mode"
 	modeList.SetShowStatusBar(false)
 	modeList.SetFilteringEnabled(false)
-
-	clusterList := list.New(nil, list.NewDefaultDelegate(), 0, 0)
-	clusterList.Title = "Select cluster to keep"
-	clusterList.SetShowStatusBar(false)
-	clusterList.SetFilteringEnabled(true)
 
 	ti := textinput.New()
 	ti.Placeholder = "/path/to/rancher-backup.tar.gz"
@@ -171,19 +190,24 @@ func newModel(cfg config.Config) model {
 	}
 
 	return model{
-		screen:      startScreen,
-		splashAt:    time.Now(),
-		animations:  cfg.UI.Animations,
-		cfg:         cfg,
-		menu:        menu,
-		modeList:    modeList,
-		clusterList: clusterList,
-		input:       ti,
-		outputInput: out,
-		reportInput: rep,
-		spinner:     sp,
-		autoOrphans: cfg.AutoOrphansEnabled(),
-		fast:        cfg.Defaults.Fast,
+		screen:          startScreen,
+		splashAt:        time.Now(),
+		animations:      cfg.UI.Animations,
+		cfg:             cfg,
+		menu:            menu,
+		modeList:        modeList,
+		sourceList:      newSourceList(80, 24),
+		s3KeyList:       list.New(nil, list.NewDefaultDelegate(), 60, 10),
+		postActionList:  newPostSanitizeList(80, 24),
+		input:           ti,
+		outputInput:     out,
+		reportInput:     rep,
+		spinner:         sp,
+		autoOrphans:     cfg.AutoOrphansEnabled(),
+		fast:            cfg.Defaults.Fast,
+		clusterSelected: make(map[string]bool),
+		treeExpanded:    make(map[string]bool),
+		treeViewport:    newTreeViewport(80, 24),
 	}
 }
 
@@ -203,9 +227,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.menu.SetSize(msg.Width-4, min(12, msg.Height-8))
+		m.menu.SetSize(msg.Width-4, min(14, msg.Height-8))
 		m.modeList.SetSize(msg.Width-4, min(8, msg.Height-8))
-		m.clusterList.SetSize(msg.Width-4, min(14, msg.Height-10))
+		m.sourceList.SetSize(msg.Width-4, min(8, msg.Height-8))
+		m.s3KeyList.SetSize(msg.Width-4, min(16, msg.Height-10))
+		m.postActionList.SetSize(msg.Width-4, min(8, msg.Height-8))
+		m.treeViewport.Width = max(20, msg.Width-4)
+		m.treeViewport.Height = max(8, msg.Height-16)
 		return m, nil
 
 	case splashTickMsg:
@@ -218,14 +246,77 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, splashTickCmd()
 
-	case restoreDoneMsg:
+	case restoreProgressMsg:
 		if msg.err != nil {
 			m.err = msg.err.Error()
-			m.screen = screenRestoreInput
+			if m.flow == flowMigrate && m.result != nil {
+				m.screen = screenPostSanitize
+			} else {
+				m.screen = screenRestoreInput
+			}
 			return m, nil
 		}
-		m.restoreStatus = fmt.Sprintf("Restore CR applied for %s. Run: rancher-migrate restore status", msg.backupName)
-		m.screen = screenDone
+		m.restoreStatus = msg.status
+		if msg.backupName != "" {
+			m.restoreLocal = msg.backupName
+		}
+		if msg.done {
+			m.restoreCh = nil
+			m.screen = screenDone
+			return m, nil
+		}
+		return m, tea.Batch(m.spinner.Tick, waitSanitizeMsg(m.restoreCh))
+
+	case s3ListDoneMsg:
+		if msg.err != nil {
+			m.err = msg.err.Error()
+			m.screen = screenMenu
+			return m, nil
+		}
+		m.s3KeyList = newS3KeyList(msg.keys, m.width, m.height)
+		m.screen = screenS3KeyList
+		return m, nil
+
+	case s3PullDoneMsg:
+		if msg.err != nil {
+			m.err = msg.err.Error()
+			m.screen = screenS3KeyList
+			return m, nil
+		}
+		m.backupPath = msg.localPath
+		m.doneLines = []string{fmt.Sprintf("Downloaded: %s", msg.localPath)}
+		if m.flow == flowS3Pull {
+			m.screen = screenDone
+			return m, nil
+		}
+		return m.beginSanitizeAfterPull(msg.localPath)
+
+	case previewDoneMsg:
+		if msg.err != nil {
+			m.err = msg.err.Error()
+			if m.afterLoad == loadToTreePreview {
+				m.screen = screenCluster
+			} else {
+				m.screen = screenGhosts
+			}
+			return m, nil
+		}
+		m.preview = msg.res
+		m.treeGroupCursor = 0
+		for k := range m.treeExpanded {
+			delete(m.treeExpanded, k)
+		}
+		refreshTreeViewport(&m.treeViewport, m.preview, m.treeExpanded, m.width, m.treeGroupCursor)
+		switch m.afterLoad {
+		case loadToOutput:
+			m.screen = screenOutput
+			m.outputFocus = 0
+			m.outputInput.Focus()
+			m.reportInput.Blur()
+			return m, textinput.Blink
+		default:
+			m.screen = screenTreePreview
+		}
 		return m, nil
 
 	case inspectDoneMsg:
@@ -235,6 +326,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		m.inspect = msg.res
+		m.inspectTree = msg.tree
+		m.treeGroupCursor = 0
+		for k := range m.treeExpanded {
+			delete(m.treeExpanded, k)
+		}
+		if m.inspectTree != nil {
+			refreshTreeViewport(&m.treeViewport, m.inspectTree, m.treeExpanded, m.width, m.treeGroupCursor)
+		}
 		m.err = ""
 		if m.flow == flowInspectOnly {
 			m.screen = screenInspectView
@@ -260,6 +359,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.result = msg.res
 		m.doneLines = buildDoneLines(msg.res)
+		m.previewAfter = backup.PreviewFromResult(msg.res)
+		m.treeTab = treeTabAfter
+		m.treeGroupCursor = 0
+		refreshTreeViewport(&m.treeViewport, m.activePreview(), m.treeExpanded, m.width, m.treeGroupCursor)
+		if m.flow == flowMigrate {
+			m.postActionList = newPostSanitizeList(m.width, m.height)
+			m.screen = screenPostSanitize
+			return m, nil
+		}
 		m.screen = screenDone
 		return m, nil
 
@@ -303,12 +411,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.updateInput(msg)
 		case screenRestoreInput:
 			return m.updateRestoreInput(msg)
+		case screenSourceSelect:
+			return m.updateSourceSelect(msg)
+		case screenS3KeyList:
+			return m.updateS3KeyList(msg)
+		case screenPostSanitize:
+			return m.updatePostSanitize(msg)
 		case screenInspectView:
 			return m.updateInspectView(msg)
 		case screenMode:
 			return m.updateMode(msg)
 		case screenCluster:
 			return m.updateCluster(msg)
+		case screenTreePreview:
+			return m.updateTreePreview(msg)
 		case screenGhosts:
 			return m.updateGhosts(msg)
 		case screenOutput:
@@ -316,15 +432,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case screenConfirm:
 			return m.updateConfirm(msg)
 		case screenDone:
-			if msg.String() == "enter" || msg.String() == "q" {
-				if m.flow == flowRestore {
-					m.screen = screenMenu
-					m.flow = flowSanitize
-					m.err = ""
-					return m, nil
-				}
-				return m, tea.Quit
-			}
+			return m.updateDone(msg)
 		}
 	}
 
@@ -339,22 +447,37 @@ func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 	switch m.menu.Index() {
 	case 0:
+		m.flow = flowMigrate
+		m.err = ""
+		m.screen = screenSourceSelect
+	case 1:
 		m.flow = flowSanitize
 		m.screen = screenInput
 		m.input.SetValue(m.backupPath)
+		m.input.Placeholder = "/path/to/rancher-backup.tar.gz"
 		m.input.Focus()
-	case 1:
+	case 2:
+		m.flow = flowS3Pull
+		m.err = ""
+		if !s3Configured(m.cfg) {
+			m.err = "s3.bucket not set — configure rancher-migrate.yaml"
+			return m, nil
+		}
+		m.screen = screenLoading
+		m.afterLoad = loadToS3List
+		return m, tea.Batch(m.spinner.Tick, runS3List(m.cfg))
+	case 3:
 		m.flow = flowInspectOnly
 		m.screen = screenInput
 		m.input.SetValue(m.backupPath)
 		m.input.Focus()
-	case 2:
+	case 4:
 		m.flow = flowRestore
 		m.screen = screenRestoreInput
 		m.input.SetValue(m.restoreLocal)
 		m.input.Placeholder = "/path/to/sanitized-backup.tar.gz"
 		m.input.Focus()
-	case 3:
+	case 5:
 		return m, tea.Quit
 	}
 	return m, textinput.Blink
@@ -382,24 +505,11 @@ func (m model) updateRestoreInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		m.restoreLocal = path
 		m.screen = screenRestoreRunning
-		m.restoreStatus = "Copying backup to operator pod…"
-		ch := make(chan tea.Msg, 4)
-		go func() {
-			client := k8s.NewClient(m.cfg.Restore)
-			ctx := context.Background()
-			name, err := client.CopyBackup(ctx, path, m.cfg.Restore.OperatorNamespace,
-				m.cfg.Restore.BackupPodLabel, m.cfg.Restore.BackupContainerPath)
-			if err != nil {
-				ch <- restoreDoneMsg{err: err}
-				return
-			}
-			if err := client.ApplyRestore(ctx, m.cfg.Restore, name); err != nil {
-				ch <- restoreDoneMsg{err: err}
-				return
-			}
-			ch <- restoreDoneMsg{backupName: name}
-		}()
-		return m, waitSanitizeMsg(ch)
+		m.restoreStatus = "Starting restore…"
+		ch := make(chan tea.Msg, 12)
+		m.restoreCh = ch
+		go restoreGoroutine(m.cfg, path, ch)
+		return m, tea.Batch(m.spinner.Tick, waitSanitizeMsg(ch))
 	}
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)
@@ -423,6 +533,7 @@ func (m model) updateInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		m.backupPath = path
+		m.afterLoad = loadToInspect
 		m.screen = screenLoading
 		m.err = ""
 		return m, tea.Batch(m.spinner.Tick, runInspect(path))
@@ -436,13 +547,45 @@ func (m model) updateInspectView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "esc":
 		m.screen = screenMenu
+		return m, nil
 	case "enter":
 		if m.flow == flowInspectOnly {
 			return m, tea.Quit
 		}
 		m.screen = screenMode
+		return m, nil
+	default:
+		return m.updateTreeKeys(msg, m.inspectTree)
 	}
-	return m, nil
+}
+
+func (m model) updateTreeKeys(msg tea.KeyMsg, tree *backup.PreviewResult) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		if tree != nil {
+			toggleGroupExpand(m.treeExpanded, tree, m.treeGroupCursor)
+			refreshTreeViewport(&m.treeViewport, tree, m.treeExpanded, m.width, m.treeGroupCursor)
+		}
+		return m, nil
+	case "j":
+		if tree != nil && m.treeGroupCursor < len(tree.Groups)-1 {
+			m.treeGroupCursor++
+			scrollTreeToGroup(&m.treeViewport, tree, m.treeExpanded, m.treeGroupCursor, m.width)
+			refreshTreeViewport(&m.treeViewport, tree, m.treeExpanded, m.width, m.treeGroupCursor)
+		}
+		return m, nil
+	case "k":
+		if m.treeGroupCursor > 0 {
+			m.treeGroupCursor--
+			scrollTreeToGroup(&m.treeViewport, tree, m.treeExpanded, m.treeGroupCursor, m.width)
+			refreshTreeViewport(&m.treeViewport, tree, m.treeExpanded, m.width, m.treeGroupCursor)
+		}
+		return m, nil
+	default:
+		var cmd tea.Cmd
+		m.treeViewport, cmd = m.treeViewport.Update(msg)
+		return m, cmd
+	}
 }
 
 func (m model) updateMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -457,32 +600,81 @@ func (m model) updateMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 	m.keepRKE1Only = m.modeList.Index() == 1
 	if m.keepRKE1Only {
-		m.screen = screenGhosts
-	} else {
-		m.clusterList = populateClusterList(m.inspect, m.width, m.height)
-		m.screen = screenCluster
+		m.afterLoad = loadToTreePreview
+		m.screen = screenLoading
+		return m, tea.Batch(m.spinner.Tick, runPreview(m.previewOptionsForRKE1()))
 	}
+	m.initClusterSelection()
+	m.screen = screenCluster
 	return m, nil
+}
+
+func (m *model) initClusterSelection() {
+	m.clusterSelected = make(map[string]bool)
+	m.clusterCursor = 0
+	ids := selectableClusterIDs(m.inspect.Clusters)
+	if len(ids) == 1 {
+		m.clusterSelected[ids[0]] = true
+	}
 }
 
 func (m model) updateCluster(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	if msg.String() == "esc" {
+	ids := selectableClusterIDs(m.inspect.Clusters)
+	if len(ids) == 0 {
+		m.err = "no downstream clusters in backup"
+		return m, nil
+	}
+	switch msg.String() {
+	case "esc":
 		m.screen = screenMode
 		return m, nil
-	}
-	if msg.String() != "enter" {
-		var cmd tea.Cmd
-		m.clusterList, cmd = m.clusterList.Update(msg)
-		return m, cmd
-	}
-	if m.clusterList.SelectedItem() == nil {
+	case "up", "k":
+		if m.clusterCursor > 0 {
+			m.clusterCursor--
+		}
 		return m, nil
+	case "down", "j":
+		if m.clusterCursor < len(ids)-1 {
+			m.clusterCursor++
+		}
+		return m, nil
+	case " ":
+		cid := ids[m.clusterCursor]
+		m.clusterSelected[cid] = !m.clusterSelected[cid]
+		return m, nil
+	case "a":
+		for _, cid := range ids {
+			m.clusterSelected[cid] = true
+		}
+		return m, nil
+	case "n":
+		for _, cid := range ids {
+			m.clusterSelected[cid] = false
+		}
+		return m, nil
+	case "enter":
+		if !m.hasClusterSelection() {
+			m.err = "select at least one cluster to keep"
+			return m, nil
+		}
+		m.err = ""
+		m.afterLoad = loadToTreePreview
+		m.screen = screenLoading
+		return m, tea.Batch(m.spinner.Tick, runPreview(m.previewOptions()))
 	}
-	m.screen = screenGhosts
 	return m, nil
 }
 
-func (m model) updateGhosts(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m model) hasClusterSelection() bool {
+	for _, on := range m.clusterSelected {
+		if on {
+			return true
+		}
+	}
+	return false
+}
+
+func (m model) updateTreePreview(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "esc":
 		if m.keepRKE1Only {
@@ -490,10 +682,116 @@ func (m model) updateGhosts(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		} else {
 			m.screen = screenCluster
 		}
+		return m, nil
+	case "tab":
+		if m.previewAfter != nil {
+			if m.treeTab == treeTabBefore {
+				m.treeTab = treeTabAfter
+			} else {
+				m.treeTab = treeTabBefore
+			}
+			refreshTreeViewport(&m.treeViewport, m.activePreview(), m.treeExpanded, m.width, m.treeGroupCursor)
+		}
+		return m, nil
+	case "enter":
+		p := m.activePreview()
+		if p != nil {
+			toggleGroupExpand(m.treeExpanded, p, m.treeGroupCursor)
+			refreshTreeViewport(&m.treeViewport, p, m.treeExpanded, m.width, m.treeGroupCursor)
+		}
+		return m, nil
+	case "c":
+		m.screen = screenGhosts
+		return m, nil
+	case "j", "k":
+		return m.updateTreeKeys(msg, m.activePreview())
+	default:
+		var cmd tea.Cmd
+		m.treeViewport, cmd = m.treeViewport.Update(msg)
+		return m, cmd
+	}
+}
+
+func (m model) updateDone(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "tab":
+		if m.previewAfter != nil && m.preview != nil {
+			if m.treeTab == treeTabBefore {
+				m.treeTab = treeTabAfter
+			} else {
+				m.treeTab = treeTabBefore
+			}
+			refreshTreeViewport(&m.treeViewport, m.activePreview(), m.treeExpanded, m.width, m.treeGroupCursor)
+		}
+		return m, nil
+	case "enter":
+		if m.flow == flowS3Pull && m.backupPath != "" {
+			m.flow = flowSanitize
+			return m.beginSanitizeAfterPull(m.backupPath)
+		}
+		if m.flow == flowRestore {
+			m.screen = screenMenu
+			m.flow = flowSanitize
+			m.err = ""
+			return m, nil
+		}
+		if m.previewAfter != nil || m.preview != nil {
+			return m.updateTreeKeys(msg, m.activePreview())
+		}
+		return m, tea.Quit
+	case "j", "k":
+		if m.flow != flowRestore && (m.previewAfter != nil || m.preview != nil) {
+			return m.updateTreeKeys(msg, m.activePreview())
+		}
+		return m, nil
+	case "q":
+		if m.flow == flowRestore {
+			m.screen = screenMenu
+			m.flow = flowSanitize
+			m.err = ""
+			return m, nil
+		}
+		return m, tea.Quit
+	case "esc":
+		if m.flow == flowS3Pull {
+			m.screen = screenMenu
+			m.err = ""
+			return m, nil
+		}
+		return m, nil
+	default:
+		if m.flow != flowRestore {
+			var cmd tea.Cmd
+			m.treeViewport, cmd = m.treeViewport.Update(msg)
+			return m, cmd
+		}
+	}
+	return m, nil
+}
+
+func (m model) activePreview() *backup.PreviewResult {
+	if m.screen == screenInspectView {
+		return m.inspectTree
+	}
+	if m.treeTab == treeTabAfter && m.previewAfter != nil {
+		return m.previewAfter
+	}
+	return m.preview
+}
+
+func (m model) updateGhosts(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "esc":
+		m.screen = screenTreePreview
 	case "a":
 		m.autoOrphans = !m.autoOrphans
 	case "enter":
 		m.applyOutputDefaults()
+		if m.preview == nil {
+			m.afterLoad = loadToOutput
+			m.screen = screenLoading
+			return m, tea.Batch(m.spinner.Tick, runPreview(m.previewOptions()))
+		}
 		m.screen = screenOutput
 		m.outputFocus = 0
 		m.outputInput.Focus()
@@ -595,11 +893,31 @@ func (m model) applyOutputDefaults() {
 	m.reportInput.SetValue(filepath.Join(repDir, base+"-sanitize-report.txt"))
 }
 
-func (m model) selectedClusterID() string {
-	if item, ok := m.clusterList.SelectedItem().(clusterItem); ok {
-		return item.id
+func (m model) selectedClusterIDs() []string {
+	var ids []string
+	for cid, on := range m.clusterSelected {
+		if on {
+			ids = append(ids, cid)
+		}
 	}
-	return ""
+	sort.Strings(ids)
+	return ids
+}
+
+func (m model) previewOptions() backup.Options {
+	opts := m.buildSanitizeOptions()
+	opts.InspectOnly = true
+	return opts
+}
+
+func (m model) previewOptionsForRKE1() backup.Options {
+	opts := backup.Options{
+		Input:        m.backupPath,
+		KeepRKE1Only: true,
+		NoAutoOrphans: !m.autoOrphans,
+		InspectOnly:  true,
+	}
+	return opts
 }
 
 func (m model) buildSanitizeOptions() backup.Options {
@@ -613,16 +931,23 @@ func (m model) buildSanitizeOptions() backup.Options {
 		Quiet:         true,
 	}
 	if !m.keepRKE1Only {
-		opts.KeepCluster = m.selectedClusterID()
+		opts.KeepClusters = m.selectedClusterIDs()
 	}
 	return opts
+}
+
+func runPreview(opts backup.Options) tea.Cmd {
+	return func() tea.Msg {
+		res, err := backup.PreviewSanitize(opts)
+		return previewDoneMsg{res: res, err: err}
+	}
 }
 
 func (m model) View() string {
 	if m.screen == screenSplash {
 		return lipgloss.NewStyle().
 			Width(m.width).
-			Render(ascii.SplashFrame(time.Now()) + "\n" + hintStyle.Render("press enter to continue"))
+			Render(ascii.SplashFrame(time.Now(), m.width, m.splashAt) + "\n" + hintStyle.Render("press enter to continue"))
 	}
 
 	var b strings.Builder
@@ -653,23 +978,70 @@ func (m model) View() string {
 			kc = "(not set — run: rancher-migrate config init)"
 		}
 		b.WriteString(fmt.Sprintf("Kubeconfig: %s\n", kc))
-		b.WriteString(hintStyle.Render("enter start restore · esc menu"))
+		b.WriteString(fmt.Sprintf("Operator:   %s  label: %s\n", m.cfg.Restore.OperatorNamespace, m.cfg.Restore.BackupPodLabel))
+		b.WriteString(hintStyle.Render("enter start restore (copy + apply + watch) · esc menu"))
+	case screenSourceSelect:
+		b.WriteString(m.sourceList.View())
+	case screenS3KeyList:
+		b.WriteString(renderS3KeyList(m.cfg))
+		b.WriteString(m.s3KeyList.View())
+		b.WriteString("\n")
+		b.WriteString(hintStyle.Render("enter download · esc menu"))
+	case screenPostSanitize:
+		for _, line := range m.doneLines {
+			b.WriteString(line)
+			b.WriteString("\n")
+		}
+		b.WriteString("\n")
+		b.WriteString(m.postActionList.View())
+		b.WriteString("\n")
+		b.WriteString(hintStyle.Render("enter select · esc menu"))
 	case screenLoading:
-		b.WriteString(fmt.Sprintf("%s Inspecting backup…\n", m.spinner.View()))
+		b.WriteString(fmt.Sprintf("%s\n\n", m.spinner.View()))
+		b.WriteString(ascii.IndeterminateLoader(m.width, time.Now()))
+		b.WriteString("\n\n")
+		if m.inspect == nil {
+			switch m.afterLoad {
+			case loadToS3List:
+				b.WriteString(subtitleStyle.Render("Listing S3 backups…"))
+			case loadToS3Pull:
+				b.WriteString(subtitleStyle.Render("Downloading from S3…"))
+			default:
+				b.WriteString(subtitleStyle.Render("Inspecting backup…"))
+			}
+		} else {
+			b.WriteString(subtitleStyle.Render("Building keep/drop tree…"))
+		}
+		b.WriteString("\n")
 		b.WriteString(subtitleStyle.Render(m.backupPath))
 	case screenInspectView:
-		b.WriteString(renderInspect(m.inspect))
+		b.WriteString(renderInspectBrief(m.inspect))
+		b.WriteString("\n")
+		if m.inspectTree != nil {
+			b.WriteString(renderTreeHeader(m.inspectTree, treeTabBefore, false, m.treeGroupCursor))
+			b.WriteString("\n")
+			b.WriteString(m.treeViewport.View())
+			b.WriteString("\n")
+			b.WriteString(hintStyle.Render("enter expand · j/k group · ↑↓ scroll · esc menu"))
+		}
 		if m.flow == flowSanitize {
 			b.WriteString("\n")
-			b.WriteString(hintStyle.Render("enter continue to sanitize · esc menu"))
+			b.WriteString(hintStyle.Render("enter continue to sanitize"))
 		} else {
 			b.WriteString("\n")
-			b.WriteString(hintStyle.Render("enter quit · esc menu"))
+			b.WriteString(hintStyle.Render("enter quit"))
 		}
 	case screenMode:
 		b.WriteString(m.modeList.View())
 	case screenCluster:
-		b.WriteString(m.clusterList.View())
+		b.WriteString(renderClusterPicker(m.inspect.Clusters, m.clusterSelected, m.clusterCursor, m.width))
+	case screenTreePreview:
+		showTabs := m.previewAfter != nil
+		b.WriteString(renderTreeHeader(m.activePreview(), m.treeTab, showTabs, m.treeGroupCursor))
+		b.WriteString("\n")
+		b.WriteString(m.treeViewport.View())
+		b.WriteString("\n")
+		b.WriteString(hintStyle.Render("c continue · enter expand group · j/k group · ↑↓ scroll · esc back"))
 	case screenGhosts:
 		b.WriteString(renderGhosts(m.inspect, m.autoOrphans))
 		b.WriteString("\n")
@@ -689,38 +1061,76 @@ func (m model) View() string {
 		b.WriteString(hintStyle.Render("tab switch field · enter confirm · esc back"))
 	case screenConfirm:
 		b.WriteString(renderConfirm(m))
+		if m.preview != nil {
+			b.WriteString("\n")
+			b.WriteString(renderTreeHeader(m.preview, treeTabBefore, false, m.treeGroupCursor))
+			b.WriteString("\n")
+			lines := backup.FormatTreeLines(m.preview, m.treeExpanded, m.width)
+			maxLines := min(8, len(lines))
+			for i := 0; i < maxLines; i++ {
+				b.WriteString(lines[i])
+				b.WriteString("\n")
+			}
+			if len(lines) > maxLines {
+				b.WriteString(hintStyle.Render(fmt.Sprintf("  … +%d more lines in full tree after run", len(lines)-maxLines)))
+				b.WriteString("\n")
+			}
+		}
 	case screenRunning:
-		b.WriteString(fmt.Sprintf("%s %s Sanitizing backup…\n\n", ascii.ProgressCow(time.Now()), m.spinner.View()))
-		b.WriteString(renderStaticBar(m.progressCur, m.progressTotal))
-		b.WriteString("\n")
 		pct := 0.0
 		if m.progressTotal > 0 {
-			pct = float64(m.progressCur) / float64(m.progressTotal) * 100
+			pct = float64(m.progressCur) / float64(m.progressTotal)
 		}
-		b.WriteString(subtitleStyle.Render(fmt.Sprintf("%.0f%%  %d / %d objects", pct, m.progressCur, m.progressTotal)))
+		b.WriteString(fmt.Sprintf("%s Sanitizing backup…\n\n", m.spinner.View()))
+		b.WriteString(ascii.ProgressLoader(pct, m.width, time.Now()))
+		b.WriteString("\n\n")
+		b.WriteString(subtitleStyle.Render(fmt.Sprintf("%.0f%%  %d / %d objects", pct*100, m.progressCur, m.progressTotal)))
 	case screenRestoreRunning:
-		b.WriteString(fmt.Sprintf("%s %s\n\n", ascii.ProgressCow(time.Now()), m.spinner.View()))
+		b.WriteString(fmt.Sprintf("%s\n\n", m.spinner.View()))
+		b.WriteString(ascii.IndeterminateLoader(m.width, time.Now()))
+		b.WriteString("\n\n")
 		b.WriteString(boxStyle.Render(m.restoreStatus))
 		b.WriteString("\n")
-		b.WriteString(subtitleStyle.Render("kubectl cp → Restore CR apply"))
+		b.WriteString(subtitleStyle.Render("kubectl cp → Restore CR → watch Ready"))
 	case screenDone:
 		title := "Sanitize complete"
-		if m.flow == flowRestore {
-			title = "Restore started"
+		if m.flow == flowRestore || m.restoreStatus != "" && strings.Contains(m.restoreStatus, "Restore Ready") {
+			title = "Restore complete"
+		} else if m.flow == flowS3Pull && len(m.doneLines) > 0 {
+			title = "S3 download complete"
 		}
 		b.WriteString(okStyle.Render(title))
 		b.WriteString("\n\n")
-		if m.flow == flowRestore {
+		if m.flow == flowRestore || strings.Contains(m.restoreStatus, "Restore") {
 			b.WriteString(m.restoreStatus)
 			b.WriteString("\n\n")
-			b.WriteString(hintStyle.Render("enter menu · q quit"))
+			if m.flow == flowS3Pull {
+				b.WriteString(hintStyle.Render("enter → sanitize this backup · esc menu"))
+			} else {
+				b.WriteString(hintStyle.Render("enter menu · q quit"))
+			}
+		} else if m.flow == flowS3Pull {
+			for _, line := range m.doneLines {
+				b.WriteString(line)
+				b.WriteString("\n")
+			}
+			b.WriteString("\n")
+			b.WriteString(hintStyle.Render("enter → sanitize this backup · esc menu"))
 		} else {
 			for _, line := range m.doneLines {
 				b.WriteString(line)
 				b.WriteString("\n")
 			}
 			b.WriteString("\n")
-			b.WriteString(hintStyle.Render("enter or q quit"))
+			if m.preview != nil {
+				b.WriteString(renderTreeHeader(m.activePreview(), m.treeTab, m.previewAfter != nil, m.treeGroupCursor))
+				b.WriteString("\n")
+				b.WriteString(m.treeViewport.View())
+				b.WriteString("\n")
+				b.WriteString(hintStyle.Render("tab before/after · enter expand · j/k group · q quit"))
+			} else {
+				b.WriteString(hintStyle.Render("enter or q quit"))
+			}
 		}
 	}
 
@@ -734,6 +1144,28 @@ func labelField(label string, ti textinput.Model, focused bool) string {
 		style = focusedStyle
 	}
 	return fmt.Sprintf("%-8s %s", label+":", style.Render(ti.View()))
+}
+
+func renderInspectBrief(in *backup.InspectResult) string {
+	if in == nil {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString(boxStyle.Render("Inspect summary"))
+	b.WriteString("\n")
+	b.WriteString(fmt.Sprintf("  %s (%s) · %d objects · %d local refs stripped on sanitize\n",
+		filepath.Base(in.Path), backup.HumanSize(in.InputSize), in.MemberCount, in.LocalArtifacts))
+	downstream := 0
+	for cid := range in.Clusters {
+		if cid != "local" {
+			downstream++
+		}
+	}
+	b.WriteString(fmt.Sprintf("  %d downstream cluster(s) · %d fleet mappings", downstream, in.FleetMappings))
+	if len(in.GhostIDs) > 0 {
+		b.WriteString(warnStyle.Render(fmt.Sprintf(" · %d ghost ID(s)", len(in.GhostIDs))))
+	}
+	return b.String()
 }
 
 func renderInspect(in *backup.InspectResult) string {
@@ -805,7 +1237,7 @@ func renderConfirm(m model) string {
 	if m.keepRKE1Only {
 		b.WriteString("  Mode:     keep all RKE1 clusters\n")
 	} else {
-		b.WriteString(fmt.Sprintf("  Keep:     %s\n", m.selectedClusterID()))
+		b.WriteString(fmt.Sprintf("  Keep:     %s\n", strings.Join(m.selectedClusterIDs(), ", ")))
 	}
 	b.WriteString(fmt.Sprintf("  Orphans:  auto-remove=%v  fast=%v\n", m.autoOrphans, m.fast))
 	b.WriteString("\n")
@@ -824,29 +1256,6 @@ func buildDoneLines(res *backup.Result) []string {
 		fmt.Sprintf("Kept:    %d objects (%s)", len(res.Kept), backup.HumanSize(res.KeptBytes)),
 		fmt.Sprintf("Removed: %d objects in %.1fs", len(res.Removed), res.Elapsed.Seconds()),
 	}
-}
-
-func populateClusterList(in *backup.InspectResult, width, height int) list.Model {
-	items := make([]list.Item, 0)
-	for _, cid := range sortedIDs(in.Clusters) {
-		if cid == "local" {
-			continue
-		}
-		meta := in.Clusters[cid]
-		items = append(items, clusterItem{id: cid, display: meta.DisplayName, kind: meta.Kind})
-	}
-	w := 60
-	h := 14
-	if width > 4 {
-		w = width - 4
-	}
-	if height > 10 {
-		h = min(14, height-10)
-	}
-	l := list.New(items, list.NewDefaultDelegate(), w, h)
-	l.Title = "Select cluster to keep"
-	l.SetShowStatusBar(false)
-	return l
 }
 
 func sortedIDs(clusters map[string]backup.ClusterMeta) []string {
@@ -870,20 +1279,15 @@ func sortedGhostKeys(ghosts map[string]int) []string {
 func runInspect(path string) tea.Cmd {
 	return func() tea.Msg {
 		res, err := backup.InspectBackup(path)
-		return inspectDoneMsg{res: res, err: err}
+		if err != nil {
+			return inspectDoneMsg{err: err}
+		}
+		tree, err := backup.BuildInspectTree(path)
+		if err != nil {
+			return inspectDoneMsg{res: res, err: err}
+		}
+		return inspectDoneMsg{res: res, tree: tree}
 	}
-}
-
-func renderStaticBar(current, total int) string {
-	total = max(1, total)
-	ratio := float64(current) / float64(total)
-	width := 36
-	filled := int(ratio * float64(width))
-	if filled > width {
-		filled = width
-	}
-	bar := strings.Repeat("█", filled) + strings.Repeat("░", width-filled)
-	return bar
 }
 
 func waitSanitizeMsg(ch <-chan tea.Msg) tea.Cmd {

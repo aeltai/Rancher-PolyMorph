@@ -246,12 +246,15 @@ func buildRemovePlan(opts Options, clusters map[string]ClusterMeta, fleetIndex *
 		remove[cid] = struct{}{}
 	}
 
-	if opts.KeepCluster != "" {
+	keepSet := keepSetFromOpts(opts)
+	if len(keepSet) > 0 {
 		for cid := range clusters {
-			if cid == "local" || cid == opts.KeepCluster {
+			if cid == "local" {
 				continue
 			}
-			remove[cid] = struct{}{}
+			if _, keep := keepSet[cid]; !keep {
+				remove[cid] = struct{}{}
+			}
 		}
 	} else if opts.KeepRKE1Only && len(opts.RemoveClusters) == 0 {
 		for cid, meta := range clusters {
@@ -266,31 +269,33 @@ func buildRemovePlan(opts Options, clusters map[string]ClusterMeta, fleetIndex *
 	}
 
 	var autoOrphans []string
-	if opts.KeepCluster != "" && !opts.NoAutoOrphans {
-		orphanSet := discoverOrphanClusterIDs(allNames, opts.KeepCluster, clusters)
+	if len(keepSet) > 0 && !opts.NoAutoOrphans {
+		orphanSet := discoverOrphanClusterIDs(allNames, keepSet, clusters)
 		for cid := range orphanSet {
 			remove[cid] = struct{}{}
 		}
 		autoOrphans = sortedKeys(orphanSet)
 		for _, cid := range fleetIndex.NameToCluster {
-			if cid == "local" || cid == opts.KeepCluster {
+			if cid == "local" {
 				continue
 			}
-			remove[cid] = struct{}{}
+			if _, keep := keepSet[cid]; !keep {
+				remove[cid] = struct{}{}
+			}
 		}
 	}
 
 	return remove, autoOrphans
 }
 
-func discoverOrphanClusterIDs(names []string, keepCluster string, clusters map[string]ClusterMeta) map[string]struct{} {
+func discoverOrphanClusterIDs(names []string, keepSet map[string]struct{}, clusters map[string]ClusterMeta) map[string]struct{} {
 	orphans := make(map[string]struct{})
 	for _, path := range names {
 		for _, match := range clusterIDRe.FindAllString(path, -1) {
 			if match == "local" {
 				continue
 			}
-			if keepCluster != "" && match == keepCluster {
+			if _, keep := keepSet[match]; keep {
 				continue
 			}
 			if _, ok := clusters[match]; !ok {
